@@ -20,10 +20,6 @@ public class AirfoilGeometry {
    private final int DEFAULTNUMPOINTS = 100;
    private final int NUMCOLUMNS = 2;
    
-   
-   
-
-
    public AirfoilGeometry() {
       this.numberOfPoints = this.DEFAULTNUMPOINTS;      
       this.controlPoints = new double[this.numberOfPoints - 1][this.NUMCOLUMNS];
@@ -31,8 +27,7 @@ public class AirfoilGeometry {
       this.cordLength = 1;
       
    }
-   
-  
+     
    public AirfoilGeometry(int numberOfPoints, double[][] points) {
       super();
       this.numberOfPoints = numberOfPoints;
@@ -51,8 +46,7 @@ public class AirfoilGeometry {
       this.controlPoints = new double[this.numberOfPoints - 1][this.NUMCOLUMNS];
       this.points = new double[this.numberOfPoints][this.NUMCOLUMNS];
    }
-   
-   
+  
    /*Naca 4 + 5 Series eqns*/
    public void becomeNACA4Series(int nacaNumber1, int nacaNumber2, int nacaNumber3, int nacaNumber4 ) {
       //fill X coord with cos spaced points
@@ -102,40 +96,44 @@ public class AirfoilGeometry {
             //yUpper
             this.points[i][1] = yc + yt * Math.cos(theta);
             
-            
          } else {
             // xLower
             this.points[i][0] = this.points[i][0] + yt * Math.sin(theta);             
             //yLower
-            this.points[i][1] = yc - yt * Math.cos(theta);            
-            
+            this.points[i][1] = yc - yt * Math.cos(theta);                        
          }
-         
-         
-         
+           
       }
       
       // Ensure midpoints are equal for closed airfoil
       int midPt = (int) Math.floor((this.numberOfPoints ) / 2);      
       this.points[midPt + 1][1] = this.points[midPt][1 ];
-      
-      
+     
    }
    
+   public double[] getPointCoords(int index){
+      double[] retVal = new double[2];
+      retVal[0] = this.points[index][0];
+      retVal[1] = this.points[index][1];
+      return retVal;      
+   }
    
+   public double[] getCtrlCoords(int index){
+      double[] retVal = new double[2];
+      retVal[0] = this.controlPoints[index][0];
+      retVal[1] = this.controlPoints[index][1];
+      return retVal;      
+   }
    
    // method for calculating Control points   
-   public void generateControlPoints() {
-      
-      this.controlPoints = new double[this.numberOfPoints][2];
-      
+   public void generateControlPoints() {      
+      this.controlPoints = new double[this.numberOfPoints][2];      
       for (int i = 0; i < this.numberOfPoints - 1; i++) {
          //x
-         this.controlPoints[i][1] = this.points[i][1] + ( this.points[i + 1][1] -  this.points[i][1]) / 2;
+         this.controlPoints[i][0] = this.points[i][0] + ( this.points[i + 1][0] -  this.points[i][0]) / 2;
          //y
-         this.controlPoints[i][2] = this.points[i][2] + ( this.points[i + 1][2] -  this.points[i][2]) / 2;      
-      }
-      
+         this.controlPoints[i][1] = this.points[i][1] + ( this.points[i + 1][1] -  this.points[i][1]) / 2;      
+      }      
    }
    
    /*Private Methods*/   
@@ -164,8 +162,6 @@ public class AirfoilGeometry {
       }*/
       
    }
-   
-   
    
    /*Getters and Setters*/
    public int getNumberOfPoints() {
