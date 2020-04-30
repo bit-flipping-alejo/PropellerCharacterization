@@ -7,27 +7,24 @@ package dataContainers;
  * vortex points
  * * * * * * * * * * * * * * */
 public class AirfoilGeometry {
-
-   
    
    private int numberOfPoints;   
    private double cordLength;
-   
    //index = point, [x][y]
    private double[][] points;   
    private double[][] controlPoints;
-
    private final int DEFAULTNUMPOINTS = 100;
    private final int NUMCOLUMNS = 2;
    
    public AirfoilGeometry() {
       this.numberOfPoints = this.DEFAULTNUMPOINTS;      
+      
       this.controlPoints = new double[this.numberOfPoints - 1][this.NUMCOLUMNS];
       this.points = new double[this.numberOfPoints][this.NUMCOLUMNS];
+      
       this.cordLength = 1;
       
    }
-     
    public AirfoilGeometry(int numberOfPoints, double[][] points) {
       super();
       this.numberOfPoints = numberOfPoints;
@@ -36,8 +33,7 @@ public class AirfoilGeometry {
       
       this.controlPoints = new double[this.numberOfPoints - 1][this.NUMCOLUMNS];      
       this.generateControlPoints();
-   }
-   
+   }  
    public AirfoilGeometry(double cordLen) {
       super();
       this.numberOfPoints = this.DEFAULTNUMPOINTS;        
@@ -70,13 +66,17 @@ public class AirfoilGeometry {
       
       for (int i = 0; i < this.numberOfPoints; i++) {
          
-         x_over_c = (this.points[i][0]/this.cordLength);
+         x_over_c = (this.points[i][0]);///this.cordLength);
          
          yt = 5.0 * t * ( 0.2969*Math.sqrt(x_over_c) - 0.126*x_over_c 
                - 0.3516*Math.pow(x_over_c, 2) + 0.2843*Math.pow(x_over_c, 3) 
                - 0.1015*Math.pow(x_over_c, 4) );
                
-         if (this.points[i][1] < this.cordLength * p ) {
+         if( i == 0 || i == this.numberOfPoints - 1) {
+            yt = 0;
+         }
+         
+         if (x_over_c <  p ) {
             // less than point of max camber                        
             yc = (m/ Math.pow(p, 2)) * (2*p*x_over_c - Math.pow(x_over_c, 2) );         
             dy_dx = ( (2 * m) / Math.pow(p, 2) ) * (p - x_over_c);   
@@ -92,13 +92,13 @@ public class AirfoilGeometry {
          
          if (i < delineationBtnTopAndBtm) {
             //xUpper
-            this.points[i][0] = this.points[i][0] - yt * Math.sin(theta);             
+            this.points[i][0] = (x_over_c - yt * Math.sin(theta)) * this.cordLength;             
             //yUpper
             this.points[i][1] = yc + yt * Math.cos(theta);
             
          } else {
             // xLower
-            this.points[i][0] = this.points[i][0] + yt * Math.sin(theta);             
+            this.points[i][0] = (x_over_c + yt * Math.sin(theta)) * this.cordLength;             
             //yLower
             this.points[i][1] = yc - yt * Math.cos(theta);                        
          }
@@ -106,8 +106,8 @@ public class AirfoilGeometry {
       }
       
       // Ensure midpoints are equal for closed airfoil
-      int midPt = (int) Math.floor((this.numberOfPoints ) / 2);      
-      this.points[midPt + 1][1] = this.points[midPt][1 ];
+      //int midPt = (int) Math.floor((this.numberOfPoints ) / 2);      
+      //this.points[midPt + 1][1] = this.points[midPt][1 ];
      
    }
    
@@ -128,39 +128,30 @@ public class AirfoilGeometry {
    // method for calculating Control points   
    public void generateControlPoints() {      
       this.controlPoints = new double[this.numberOfPoints][2];      
-      for (int i = 0; i < this.numberOfPoints - 1; i++) {
+      for (int i = 0; i < this.numberOfPoints - 1 ; i++) {
          //x
-         this.controlPoints[i][0] = this.points[i][0] + ( this.points[i + 1][0] -  this.points[i][0]) / 2;
+         this.controlPoints[i][0] =  ( this.points[i + 1][0] +  this.points[i][0]) / 2;
          //y
-         this.controlPoints[i][1] = this.points[i][1] + ( this.points[i + 1][1] -  this.points[i][1]) / 2;      
-      }      
+         this.controlPoints[i][1] =  ( this.points[i + 1][1] +  this.points[i][1]) / 2;      
+      }     
+      
+      for (int i = 0; i < this.numberOfPoints - 1 ; i++) {
+         System.out.println("Idx: "+ i + " Xctrl: " + this.controlPoints[i][0] + ", Yctrl: " + this.controlPoints[i][1]);
+      }
+      
    }
    
    /*Private Methods*/   
    private void generateCosSpacing() {
-      
-      //Set initial and final points
-      
-      
-      //generate constants
-      double numPtsOnX = Math.floor((this.numberOfPoints ) / 2);
-      double midpt = this.cordLength / 2;      
-      double deltaAngle = Math.PI / numPtsOnX;
-      
-      
-      double currAngle = deltaAngle;
-      
-      for (int i = 0 ; i < numPtsOnX; i++) {         
-         currAngle = deltaAngle * i; 
-         this.points[i][0] = midpt * (1 - Math.cos(currAngle));
-         this.points[ this.numberOfPoints - (i + 1) ][0] = this.points[i][0];
-                 
+
+      for (int i = 0; i < this.numberOfPoints; i++) {
+         this.points[i][0] = (0.5) * ( Math.cos( (2*Math.PI / this.numberOfPoints) * i) + 1)   ;         
       }
       /*
       for (int i = 0; i < this.numberOfPoints; i++) {
-         System.out.println("Point: " + i + ", value: " + this.points[i][1] + ", currAngle: " + currAngle );
-      }*/
-      
+         System.out.println("Point: " + i + ", value: " + this.points[i][0]  );
+      }
+      */
    }
    
    /*Getters and Setters*/

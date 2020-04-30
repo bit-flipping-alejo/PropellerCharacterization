@@ -19,8 +19,8 @@ public class Main {
       double x[] = new double [ag.getNumberOfPoints()];
       double y[] = new double [ag.getNumberOfPoints()];
       
-      double xc[] = new double [ag.getNumberOfPoints()];
-      double yc[] = new double [ag.getNumberOfPoints()];
+      double xc[] = new double [ag.getNumberOfPoints() - 1];
+      double yc[] = new double [ag.getNumberOfPoints() - 1];
       
       double thePts[][] = ag.getPoints();
       double ctrlPts[][] = ag.getControlPoints();
@@ -29,9 +29,10 @@ public class Main {
          x[i] = thePts[i][0];
          y[i] = thePts[i][1];
          
-         xc[i] = ctrlPts[i][0];
-         yc[i] = ctrlPts[i][1];
-         
+         if (i != ag.getNumberOfPoints() - 1) {
+            xc[i] = ctrlPts[i][0];
+            yc[i] = ctrlPts[i][1];
+         } 
       }
       //https://knowm.org/javadocs/xchart/index.html
       XYChart chart = QuickChart.getChart("your airfoil", "cord location", "thickness", "airfoil points", x, y);      
