@@ -135,10 +135,11 @@ public class AirfoilGeometry {
          this.controlPoints[i][1] =  ( this.points[i + 1][1] +  this.points[i][1]) / 2;      
       }     
       
+      /*
       for (int i = 0; i < this.numberOfPoints - 1 ; i++) {
          System.out.println("Idx: "+ i + " Xctrl: " + this.controlPoints[i][0] + ", Yctrl: " + this.controlPoints[i][1]);
       }
-      
+      */
    }
    
    /*Private Methods*/   
