@@ -33,6 +33,12 @@ public class Main {
             xc[i] = ctrlPts[i][0];
             yc[i] = ctrlPts[i][1];
          } 
+         
+         /*
+         if (i > ag.getNumberOfPoints() / 4) {
+            break;
+         }
+           */ 
       }
       //https://knowm.org/javadocs/xchart/index.html
       XYChart chart = QuickChart.getChart("your airfoil", "cord location", "thickness", "airfoil points", x, y);      

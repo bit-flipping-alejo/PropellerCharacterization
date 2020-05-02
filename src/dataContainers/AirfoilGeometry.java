@@ -6,9 +6,14 @@ package dataContainers;
  * gets geometry points, calculates the 
  * vortex points
  * * * * * * * * * * * * * * */
+
+//TODO add checks for AoA
+
 public class AirfoilGeometry {
    
    private int numberOfPoints;   
+   private int numberOfCtrlPoints;   
+   private double angleOfAttack;
    private double cordLength;
    //index = point, [x][y]
    private double[][] points;   
@@ -19,6 +24,7 @@ public class AirfoilGeometry {
    public AirfoilGeometry() {
       this.numberOfPoints = this.DEFAULTNUMPOINTS;      
       
+      this.numberOfCtrlPoints= this.numberOfPoints - 1; 
       this.controlPoints = new double[this.numberOfPoints - 1][this.NUMCOLUMNS];
       this.points = new double[this.numberOfPoints][this.NUMCOLUMNS];
       
@@ -30,7 +36,7 @@ public class AirfoilGeometry {
       this.numberOfPoints = numberOfPoints;
       this.points = points;  
       this.cordLength = points[this.numberOfPoints - 1][1];
-      
+      this.numberOfCtrlPoints= this.numberOfPoints - 1;
       this.controlPoints = new double[this.numberOfPoints - 1][this.NUMCOLUMNS];      
       this.generateControlPoints();
    }  
@@ -38,7 +44,7 @@ public class AirfoilGeometry {
       super();
       this.numberOfPoints = this.DEFAULTNUMPOINTS;        
       this.cordLength = cordLen; 
-      
+      this.numberOfCtrlPoints= this.numberOfPoints - 1;
       this.controlPoints = new double[this.numberOfPoints - 1][this.NUMCOLUMNS];
       this.points = new double[this.numberOfPoints][this.NUMCOLUMNS];
    }
@@ -90,7 +96,7 @@ public class AirfoilGeometry {
          
          theta = Math.atan(dy_dx);
          
-         if (i < delineationBtnTopAndBtm) {
+         if (i > delineationBtnTopAndBtm) { // ensures panels are made clockwise
             //xUpper
             this.points[i][0] = (x_over_c - yt * Math.sin(theta)) * this.cordLength;             
             //yUpper
@@ -103,6 +109,15 @@ public class AirfoilGeometry {
             this.points[i][1] = yc - yt * Math.cos(theta);                        
          }
            
+      }
+      
+      //AoA Correction
+      double aoaX = Math.cos(this.angleOfAttack);
+      double aoaY = Math.sin(this.angleOfAttack);
+      for (int i = 0; i < this.numberOfPoints; i++) {
+         this.points[i][0] = this.points[i][0] * aoaX;
+         //yUpper
+         this.points[i][1] = this.points[i][1] - this.points[i][0]*aoaY;
       }
       
       // Ensure midpoints are equal for closed airfoil
@@ -128,7 +143,7 @@ public class AirfoilGeometry {
    // method for calculating Control points   
    public void generateControlPoints() {      
       this.controlPoints = new double[this.numberOfPoints][2];      
-      for (int i = 0; i < this.numberOfPoints - 1 ; i++) {
+      for (int i = 0; i < this.numberOfCtrlPoints ; i++) {
          //x
          this.controlPoints[i][0] =  ( this.points[i + 1][0] +  this.points[i][0]) / 2;
          //y
@@ -187,5 +202,19 @@ public class AirfoilGeometry {
    public void setCordLength(int cordLength) {
       this.cordLength = cordLength;
    }
+   public int getNumberOfCtrlPoints() {
+      return numberOfCtrlPoints;
+   }
+   public void setNumberOfCtrlPoints(int numberOfCtrlPoints) {
+      this.numberOfCtrlPoints = numberOfCtrlPoints;
+   }
+   public double getAngleOfAttack() {
+      return angleOfAttack;
+   }
+   public void setAngleOfAttack(double angleOfAttack) {
+      this.angleOfAttack = angleOfAttack;
+   }
+   
+   
    
 }
