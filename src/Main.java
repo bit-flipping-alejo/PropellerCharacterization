@@ -5,12 +5,15 @@ import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.markers.SeriesMarkers;
 
-import dataContainers.AirfoilGeometry;
+import geometryContainers.AirfoilGeometry;
+
 
 public class Main {
 
    public static void main(String[] args) {
       AirfoilGeometry ag = new AirfoilGeometry(2.5);
+      
+      ag.setangleOfAttackRad(5 * (Math.PI/180));
       
       ag.becomeNACA4Series(2,4,1,2);
       ag.generateControlPoints();
