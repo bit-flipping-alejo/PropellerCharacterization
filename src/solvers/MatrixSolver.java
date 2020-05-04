@@ -17,6 +17,8 @@ public class MatrixSolver {
    private int numRows;
    private int numCols;
 
+   public MatrixSolver() {}
+   
    public MatrixSolver(double[][] a, double[] b, int numRows, int numCols) {
       super();
       A = a;
@@ -88,7 +90,7 @@ public class MatrixSolver {
    //the B matrix resides, this allows all 
    // elementary operations to be performed
    // at once
-   private void populateAugmentedMatrix() {      
+   public void populateAugmentedMatrix() {      
       for (int i = 0; i < this.numRows; i++) {      
          for (int j = 0; j < this.numCols + 1; j++) {
             if(j == this.numRows) {

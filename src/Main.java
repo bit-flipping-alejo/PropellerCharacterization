@@ -6,6 +6,7 @@ import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.markers.SeriesMarkers;
 
 import geometryContainers.AirfoilGeometry;
+import solvers.MatrixSolver;
 
 
 public class Main {
@@ -62,6 +63,7 @@ public class Main {
    public static void testAGaussElim() {
       double[][] testA = new double[3][3];
       double[] testB = new double [3];
+      MatrixSolver ms = new MatrixSolver();
       
       testA[0][1] = 2;
       testA[0][2] = 1;
@@ -78,6 +80,14 @@ public class Main {
       testB[0] = 8;
       testB[1] = -11;
       testB[2] = -3;
+      
+      ms.setA(testA);
+      ms.setB(testB);
+      
+      ms.populateAugmentedMatrix();
+      ms.doGaussianElimination();
+      
+      double[][] postA = ms.getAugmentedMatrix();
       
       
    }
