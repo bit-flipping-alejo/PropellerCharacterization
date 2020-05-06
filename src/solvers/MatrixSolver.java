@@ -2,10 +2,6 @@ package solvers;
 
 public class MatrixSolver {
 
-   /* Pseudo code at bottom of page
-    * https://en.wikipedia.org/wiki/Gaussian_elimination
-    * https://en.wikipedia.org/wiki/LU_decomposition
-    * */
 
    // of form AX = B, you solve for x
    private double [][] A;
@@ -122,16 +118,16 @@ public class MatrixSolver {
       
       //populate B
       for (int i = 0; i < this.numRows; i++) {
-         B[i] = this.augmentedMatrix[i][this.numCols + 1];
+         B[i] = this.augmentedMatrix[i][this.numCols ];
       }
       
       
-      for (int i = this.numRows; i >= 0; i-- ) {
+      for (int i = (this.numRows - 1); i >= 0; i-- ) {
          this.X[i] = B[i];
          for (int j = i + 1; j < this.numCols; j++) {
             this.X[i] = this.X[i] - ( this.augmentedMatrix[i][j] * this.X[j] );
          }
-         this.X[i] = this.X[i] / this.augmentedMatrix[i][i];
+         this.X[i] =   this.X[i] /  this.augmentedMatrix[i][i];
       }
 
    }
@@ -153,67 +149,43 @@ public class MatrixSolver {
     * * * * * * * * * * * * * * */
 
    
-   
-   
-   
-   
-   
    /*Getters and setters*/
-   
    
    public double[][] getA() {
       return A;
    }
 
-
-
    public void setA(double[][] a) {
       A = a;
    }
-
-
 
    public double[] getB() {
       return B;
    }
 
-
-
    public void setB(double[] b) {
       B = b;
    }
-
-
 
    public int getNumRows() {
       return numRows;
    }
 
-
-
    public void setNumRows(int numRows) {
       this.numRows = numRows;
    }
-
-
 
    public int getNumCols() {
       return numCols;
    }
 
-
-
    public void setNumCols(int numCols) {
       this.numCols = numCols;
    }
 
-
-
    public double[] getX() {
       return X;
    }
-
-
 
    public double[][] getAugmentedMatrix() {
       return augmentedMatrix;

@@ -153,6 +153,15 @@ public class AirfoilGeometry {
       return retVal;      
    }
 
+   public void setPointCoords(int index, double x, double y){      
+      this.points[index][0] = x;
+      this.points[index][1] = y;
+   }
+
+   public void setCtrlCoords(int index, double x, double y){
+      this.controlPoints[index][0] = x;
+      this.controlPoints[index][1] = y;
+   }
    
    /* * * * * * * * * * * * * 
     * Helper functions

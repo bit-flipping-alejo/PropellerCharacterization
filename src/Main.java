@@ -7,6 +7,7 @@ import org.knowm.xchart.style.markers.SeriesMarkers;
 
 import geometryContainers.AirfoilGeometry;
 import solvers.MatrixSolver;
+import solvers.VortexPanelSolver;
 
 
 public class Main {
@@ -14,9 +15,11 @@ public class Main {
    public static void main(String[] args) {
       //showAirfoil();
       
-      testAGaussElim();
+      //testAGaussElim();
       
-
+      //testVPMSolverAirfoilFlip();
+      
+      testVPMSolver();
    }
 
    public static void showAirfoil() {
@@ -98,7 +101,81 @@ public class Main {
       }
       
       ms.doBackwardsSubstitution();
+      double[] postX = ms.getX();
+      
+      System.out.println("-- SOLN --");
+      for (int i = 0; i < ms.getNumRows(); i++) {
+         System.out.println( i + " : " + postX[i]);
+      }
+      
       
       
    }
+
+   public static void testVPMSolverAirfoilFlip() {
+      AirfoilGeometry ag = new AirfoilGeometry(2.5);
+      ag.setangleOfAttackRad(5 * (Math.PI/180));
+      ag.becomeNACA4Series(2,4,1,2);
+      ag.generateControlPoints();
+      
+      VortexPanelSolver vpm = new VortexPanelSolver(ag);
+      vpm.setVinfinity(1);
+      
+      //vpm.runVPMSolver();
+      
+      AirfoilGeometry postFlip = vpm.getAirfoil();
+      
+      
+      double x[] = new double [postFlip.getNumberOfPoints()];
+      double y[] = new double [postFlip.getNumberOfPoints()];
+
+      double xc[] = new double [postFlip.getNumberOfPoints() - 1];
+      double yc[] = new double [postFlip.getNumberOfPoints() - 1];
+
+      double thePts[][] = postFlip.getPoints();
+      double ctrlPts[][] = postFlip.getControlPoints();
+
+      for (int i = 0; i < postFlip.getNumberOfPoints(); i++) {
+         x[i] = thePts[i][0];
+         y[i] = thePts[i][1];
+
+         if (i != postFlip.getNumberOfPoints() - 1) {
+            xc[i] = ctrlPts[i][0];
+            yc[i] = ctrlPts[i][1];
+         } 
+
+        
+      }
+      //https://knowm.org/javadocs/xchart/index.html
+      XYChart chart = QuickChart.getChart("your airfoil", "cord location", "thickness", "airfoil points", x, y);      
+      XYSeries series = chart.addSeries("ControlPts", xc, yc);
+      series.setMarker(SeriesMarkers.DIAMOND);
+
+      new SwingWrapper(chart).displayChart();
+      
+   }
+
+   public static void testVPMSolver() {
+      
+   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

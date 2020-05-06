@@ -8,69 +8,92 @@ package dataContainers;
  * * * * * * * * * * * * * * */
 public class GeometricIntegral {
 
-   private int numPts;
-   private double[] normalIntegral;
-   private double[] tangentialIntegral;
-   
+   private int numRows;
+   private int numCols;
+
+   private double[][] normalIntegral;
+   private double[][] tangentialIntegral;
+
    private final int DEFAULT_NUMPTS = 100;
-   
+
    public GeometricIntegral() {
-      this.numPts = this.DEFAULT_NUMPTS;  
-      this.normalIntegral = new double[this.numPts];
-      this.tangentialIntegral = new double[this.numPts];
-      
+      this.numRows = this.DEFAULT_NUMPTS;  
+      this.numCols = this.DEFAULT_NUMPTS; 
+      this.normalIntegral = new double[numRows][numCols];
+      this.tangentialIntegral = new double[numRows][numCols];     
    }
-   
-   public GeometricIntegral(int numPts) {
-      this.numPts = numPts;
-      this.normalIntegral = new double[this.numPts];
-      this.tangentialIntegral = new double[this.numPts];
+
+   public GeometricIntegral(int squareMatrixNumRows) {
+      this.numRows = squareMatrixNumRows;  
+      this.numCols = squareMatrixNumRows; 
+      this.normalIntegral = new double[this.numRows][this.numCols];
+      this.tangentialIntegral = new double[this.numRows][this.numCols];     
    }
-   
-   public GeometricIntegral(double[] normalIntegral,
-         double[] tangentialIntegral, int numPts) {
+
+   public GeometricIntegral(int numRows, int numCols, double[][] normalIntegral,
+         double[][] tangentialIntegral) {
       super();
+      this.numRows = numRows;
+      this.numCols = numCols;
       this.normalIntegral = normalIntegral;
       this.tangentialIntegral = tangentialIntegral;
-      this.numPts = numPts;
    }
 
    /* Specific getters and setters*/
-   public double getNormalIntegralIndex(int index) {
-      return normalIntegral[index];
+   public double getNormalIntegralIndex(int i, int j) {
+      return normalIntegral[i][j];
    }
 
-   public void setNormalIntegralIndex(int index, double normalIntegralVal) {
-      this.normalIntegral[index] = normalIntegralVal;
+   public void setNormalIntegralIndex(int i, int j, double normalIntegralVal) {
+      this.normalIntegral[i][j] = normalIntegralVal;
    }
 
-   public double getTangentialIntegralIndex(int index) {
-      return tangentialIntegral[index];
+   public double getTangentialIntegralIndex(int i, int j) {
+      return tangentialIntegral[i][j];
    }
 
-   public void setTangentialIntegralIndex(int index, double tangentialIntegralVal) {
-      this.tangentialIntegral[index] = tangentialIntegralVal;
+   public void setTangentialIntegralIndex(int i, int j, double tangentialIntegralVal) {
+      this.tangentialIntegral[i][j] = tangentialIntegralVal;
    }
-      
-   
+
+
+
+
+
    /* Generic getters and setters*/
-   public double[] getNormalIntegral() {
+   public int getNumRows() {
+      return numRows;
+   }
+
+   public void setNumRows(int numRows) {
+      this.numRows = numRows;
+   }
+
+   public int getNumCols() {
+      return numCols;
+   }
+
+   public void setNumCols(int numCols) {
+      this.numCols = numCols;
+   }
+
+   public double[][] getNormalIntegral() {
       return normalIntegral;
    }
 
-   public void setNormalIntegral(double[] normalIntegral) {
+   public void setNormalIntegral(double[][] normalIntegral) {
       this.normalIntegral = normalIntegral;
    }
 
-   public double[] getTangentialIntegral() {
+   public double[][] getTangentialIntegral() {
       return tangentialIntegral;
    }
 
-   public void setTangentialIntegral(double[] tangentialIntegral) {
+   public void setTangentialIntegral(double[][] tangentialIntegral) {
       this.tangentialIntegral = tangentialIntegral;
    }
-   
-   
-   
-   
+
+
+
+
 }

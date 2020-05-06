@@ -1,6 +1,5 @@
 package solvers;
 
-import java.util.Collections;
 
 import dataContainers.GeometricIntegral;
 import geometryContainers.AirfoilGeometry;
@@ -17,29 +16,71 @@ public class VortexPanelSolver {
 
    private AirfoilGeometry airfoil;
    private final double epsilon = .0000001; //max resolution
-
-   /* * * * * * * * * * * * * 
-    * Constructors 
-    * * * * * * * * * * * * */
-
-   public VortexPanelSolver() {
+   private double Vinfinity; // meters per second
+   private double[] vortexStrengths;   
+   private GeometricIntegral geometricIntegral;
+   
+   private double[] tangentialVeloc;
+   private double[] coeffOfPressure;
+   
+   private double[] beta;
+   
+   /* Constructors  */
+    public VortexPanelSolver() {
 
    }
-
    public VortexPanelSolver (AirfoilGeometry airFoil) {
       this.airfoil = airFoil;
 
       if (! this.checkPanelOrientation() ) {
          this.flipPanelOrientation();
-         System.out.println("VortexPanelSolver: Panel orientation is wrong");
+         //System.out.println("VortexPanelSolver: Panel orientation is wrong");
       }
-
+      this.tangentialVeloc = new double[this.airfoil.getNumberOfCtrlPoints()];
+      this.coeffOfPressure = new double[this.airfoil.getNumberOfCtrlPoints()];
+      this.beta = new double[this.airfoil.getNumberOfCtrlPoints()];
+      
    }
 
-   /* * * * * * * * * * * * * 
-    * Solver 
-    * * * * * * * * * * * * */
-   public Boolean runVPMSolver() {
+   // prepare panels for VPM
+   private Boolean checkPanelOrientation() {
+      if (this.airfoil == null) {
+         return false;
+      }
+
+      double panelCoordSum = 0;
+      for (int i = 0; i < this.airfoil.getNumberOfCtrlPoints(); i++) {
+         double[] currPt = this.airfoil.getPointCoords(i);
+         double[] ptPlusOne = this.airfoil.getPointCoords(i + 1);
+         panelCoordSum += (currPt[0] - ptPlusOne[0]) * (currPt[1] - ptPlusOne[1]);
+      }
+
+      if (panelCoordSum > 0 ) {
+         return true;  
+      }
+      return false;
+
+   }
+   public void flipPanelOrientation() {
+      
+      double [][] afPts = this.airfoil.getPoints();
+      int numPtsOverTwo = (int) Math.floor(this.airfoil.getNumberOfPoints() / 2);
+
+      for (int i = 0; i < numPtsOverTwo; i++ ) {         
+            double[] temp = this.airfoil.getPointCoords(i);          
+            double [] bottom = this.airfoil.getPointCoords(this.airfoil.getNumberOfPoints() - 1 - i);
+            
+            this.airfoil.setPointCoords(i, bottom[0], bottom[1]);
+            this.airfoil.setPointCoords(this.airfoil.getNumberOfPoints() - 1 - i, temp[0], temp[1]);         
+      }
+      
+      this.airfoil.generateControlPoints();
+      
+   }
+   
+   
+   // Solver
+   public void runVPMSolver() {
 
       // Numerical integration variables
       // Calculate each panels: 
@@ -71,7 +112,7 @@ public class VortexPanelSolver {
             beta[i] = beta[i] - (2 * Math.PI);
          }
       }
-      
+      this.beta = beta;
       
       /* * * * * * * * * * * * * * * * * * * * * * * * * * *
        * Geometric integral
@@ -83,51 +124,54 @@ public class VortexPanelSolver {
        *   loops thru all panels i != j
        * * * * * * * * * * * * * * * * * * * * * * * * * * */
       GeometricIntegral geometricIntegral = this.calculateGeometricIntegral(s, phi);
-
+      double [] VinfArray = this.calculateVinfinities(beta);
       
-
-      return true;
-   }
-
-
-   /* * * * * * * * * * * * * 
-    * Private Functions 
-    * * * * * * * * * * * * */
-   private Boolean checkPanelOrientation() {
-      if (this.airfoil == null) {
-         return false;
-      }
-
-      double panelCoordSum = 0;
+      this.geometricIntegral = geometricIntegral;
+      
+      //satisfy Kutta Condition in Normal Integ and Vinf array
+      double[][] normalIntegWKuttaCond = geometricIntegral.getNormalIntegral();
+      int index2Replace = this.airfoil.getNumberOfCtrlPoints() - 1;
       for (int i = 0; i < this.airfoil.getNumberOfCtrlPoints(); i++) {
-         double[] currPt = this.airfoil.getPointCoords(i);
-         double[] ptPlusOne = this.airfoil.getPointCoords(i + 1);
-         panelCoordSum += (currPt[0] - ptPlusOne[0]) * (currPt[1] - ptPlusOne[1]);
+         normalIntegWKuttaCond[index2Replace][i] = 0;
       }
-
-      if (panelCoordSum > 0 ) {
-         return true;  
-      }
-      return false;
-
+      normalIntegWKuttaCond[index2Replace][0] = 1;
+      normalIntegWKuttaCond[index2Replace][index2Replace] = 1;
+      VinfArray[index2Replace] = 0;
+      
+      //use matrixSolver class here
+      MatrixSolver matrixSolver = new MatrixSolver();
+      matrixSolver.setNumRows(this.airfoil.getNumberOfCtrlPoints());
+      matrixSolver.setNumCols(this.airfoil.getNumberOfCtrlPoints());
+      matrixSolver.setA(normalIntegWKuttaCond);
+      matrixSolver.setB(VinfArray);
+      
+      matrixSolver.makeAugmentedMatrix();
+      matrixSolver.populateAugmentedMatrix();
+      matrixSolver.doGaussianElimination();
+      matrixSolver.doBackwardsSubstitution();
+      
+      this.vortexStrengths = matrixSolver.getX();
+      
+      
    }
 
-   //TODO finish panel flipping orientation
-   
-   private void flipPanelOrientation() {
-      /*
-      double [][] afPts = this.airfoil.getPoints();
-      double [][] ctrlPts = this.airfoil.getControlPoints();
-
-
-      for (int i = 0; i < (this.airfoil.getNumberOfPoints() / 2); i++ ) {
-         Collections.swap(afPts, i,  this.airfoil.getNumberOfPoints() - 1 - i );
-         Collections.swap(ctrlPts, i, this.airfoil.getNumberOfCtrlPoints() - 1 - i);
+   public void solveForTangentialVelocAndCp(double[] gamma) {
+      
+      for (int i = 0; i < this.airfoil.getNumberOfCtrlPoints(); i++) {
+         double rollingSum = 0;
+         for (int j = 0; j < this.airfoil.getNumberOfCtrlPoints(); j++) {
+            rollingSum += gamma[j]/(2*Math.PI*this.geometricIntegral.getNormalIntegralIndex(i, j));
+         }   
+         this.tangentialVeloc[i] = this.Vinfinity * Math.sin( this.beta[i] ) + rollingSum + (gamma[i]/2);
+         this.coeffOfPressure[i] = 1 - Math.pow( (this.tangentialVeloc[i] / this.Vinfinity) , 2);
       }
-       */
+      
    }
    
-
+   
+   
+   
+   // Solver helper functions
    private GeometricIntegral calculateGeometricIntegral(double[] s, double[] phi) {
       
       /* Calculation Convention
@@ -156,8 +200,8 @@ public class VortexPanelSolver {
             
             if (i == j) {
                // is zero
-               geomInteg.setNormalIntegralIndex(i, 0);
-               geomInteg.setTangentialIntegralIndex(i, 0);
+               geomInteg.setNormalIntegralIndex(i,j, 0);
+               geomInteg.setTangentialIntegralIndex(i,j, 0);
                
             } else {
                
@@ -189,8 +233,8 @@ public class VortexPanelSolver {
                
                
                
-               geomInteg.setNormalIntegralIndex(i, normVal);
-               geomInteg.setTangentialIntegralIndex(i, tanVal);
+               geomInteg.setNormalIntegralIndex(i,j, normVal);
+               geomInteg.setTangentialIntegralIndex(i,j, tanVal);
             }
             
          }
@@ -201,7 +245,73 @@ public class VortexPanelSolver {
       return geomInteg;
    }
 
+   private double[] calculateVinfinities(double[] beta) {
+      double[] VinfArray = new double[this.airfoil.getNumberOfCtrlPoints()];
+      
+      for (int i = 0; i < this.airfoil.getNumberOfCtrlPoints(); i++) {
+         VinfArray[i] = 2*Math.PI*this.Vinfinity*Math.cos(beta[i]);
+      }
+      
+      return VinfArray;
+   }
+   
+   
+   
+   
+   
+   /*Getters and Setters*/
+   public AirfoilGeometry getAirfoil() {
+      return airfoil;
+   }
 
+   public void setAirfoil(AirfoilGeometry airfoil) {
+      this.airfoil = airfoil;
+   }
 
+   public double getVinfinity() {
+      return Vinfinity;
+   }
+
+   public void setVinfinity(double vinfinity) {
+      Vinfinity = vinfinity;
+   }
+
+   public double getEpsilon() {
+      return epsilon;
+   }
+   public double[] getVortexStrengths() {
+      return vortexStrengths;
+   }
+   public void setVortexStrengths(double[] vortexStrengths) {
+      this.vortexStrengths = vortexStrengths;
+   }
+   public GeometricIntegral getGeometricIntegral() {
+      return geometricIntegral;
+   }
+   public void setGeometricIntegral(GeometricIntegral geometricIntegral) {
+      this.geometricIntegral = geometricIntegral;
+   }
+   public double[] getTangentialVeloc() {
+      return tangentialVeloc;
+   }
+   public void setTangentialVeloc(double[] tangentialVeloc) {
+      this.tangentialVeloc = tangentialVeloc;
+   }
+   public double[] getCoeffOfPressure() {
+      return coeffOfPressure;
+   }
+   public void setCoeffOfPressure(double[] coeffOfPressure) {
+      this.coeffOfPressure = coeffOfPressure;
+   }
+   public double[] getBeta() {
+      return beta;
+   }
+   public void setBeta(double[] beta) {
+      this.beta = beta;
+   }
+   
+   
+   
+   
 
 }
