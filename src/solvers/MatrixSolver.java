@@ -8,6 +8,10 @@ public class MatrixSolver {
    private double [] X;
    private double [] B;
 
+   private double[] m1;
+   private double[] m2;
+   
+   
    private double[][] augmentedMatrix;
    
    private int numRows;
@@ -26,12 +30,16 @@ public class MatrixSolver {
    }
 
    
+   
+   
+   
+   
    /*Gaussian elimination chosen since each Geometric
     * integral is calculated per point O(n^2) where as
     * LU Decomposition is performed in O(n^3) but it allows
     * solutions in O(N^2)*/
 
-   public void doGaussianElimination() {
+   public void doGaussianEliminationPivot() {
       
       int h = 0; 
       int k = 0;
@@ -80,6 +88,34 @@ public class MatrixSolver {
       
    }
 
+   public void doGaussianEliminationNoPivot() {
+      for (int i = 0; i < this.numRows-1; i++) {
+         for (int k = i+1; k < this.numCols; k++) {
+            double ratio = this.A[i][k]/this.A[k][k];
+            this.A[i][k] = 0;
+            for (int j = k+1; j < this.numCols; j++) {
+               this.A[i][j] -= (this.A[i][k] * this.A[k][j]);
+            }
+            
+         }
+      }
+   }
+   
+   public void doBackwardsSubstitutionNoPivot() {
+      //https://algowiki-project.org/en/Backward_substitution#General_description_of_the_algorithm
+      this.X = new double[this.numRows];
+      this.B = new double[this.numRows];
+      
+      for (int i = (this.numRows - 1); i >= 0; i-- ) {
+         this.X[i] = B[i];
+         for (int j = i + 1; j < this.numCols; j++) {
+            this.X[i] = this.X[i] - ( this.A[i][j] * this.X[j] );
+         }
+         this.X[i] =   this.X[i] /  this.A[i][i];
+      }
+
+   }
+   
    //Augmented matrix is regular A matrix, 
    //but with n+1 columns, in the n+1th column 
    //the B matrix resides, this allows all 
@@ -105,7 +141,6 @@ public class MatrixSolver {
          
       } // end i      
    }
-
 
    /*Backwards substitution is the algo by which 
     * we take the upper triangular augmented matrix
@@ -133,21 +168,81 @@ public class MatrixSolver {
    }
    
    
-   /* * * * * * * * * * * * * * * 
-    * 
-    * Solution provided by letting A
-    * equal to LU where L is lower 
-    * triangular and U is upper 
-    * triangular
-    * 
-    * reframes problem as LUX = B
-    * with a dummy variable substitution
-    * of UX = Y you get LY = B , then you can
-    * solve UX = Y for X which breaks it into 
-    * 2 smaller problems instead of 1 bigger one
-    * 
-    * * * * * * * * * * * * * * */
+   
+   
+   
+   
+   
+   /*Matrix Multiplication*/
+   public double[] doMatrixMultiply(int size) {
+      double[] res = new double[size];
+      
+      for (int i = 0; i < size; i++) {
+         res[i] = this.m1[i] * this.m2[i];
+      }
+      
+      return res;
+   }
+   
+   public double[] doMatrixMultiply(int size, double[] mat1, double[] mat2) {
+      double[] res = new double[size];
+      
+      for (int i = 0; i < size; i++) {
+         res[i] = mat1[i] * mat2[i];
+      }
+      
+      return res;
+   }
 
+   public double[] doMatrixMultiplyCosOnMat2(int size, double[] mat1, double[] mat2) {
+      double[] res = new double[size];
+      
+      for (int i = 0; i < size; i++) {
+         res[i] = mat1[i] * Math.cos(mat2[i]);
+      }
+      
+      return res;
+   }
+
+   public double[] doMatrixMultiplySinOnMat2(int size, double[] mat1, double[] mat2) {
+      double[] res = new double[size];
+      
+      for (int i = 0; i < size; i++) {
+         res[i] = mat1[i] * Math.sin(mat2[i]);
+      }
+      
+      return res;
+   }
+   
+   public double doSum(int size, double[] mat) {
+      double res = 0;
+      for(int i = 0; i < size; i++) {
+         res += mat[i];
+      }
+      return res;
+   }
+
+   public double[] doMatrixMultiplyByConst(int size, double[] mat1, double theVal) {
+      double[] res = new double[size];
+
+      for (int i = 0; i < size; i++) {
+         res[i] = mat1[i] * theVal;
+      }
+
+      return res;
+   }
+   
+   public double[] doMatrixAdditionByConst(int size, double[] mat1, double theVal) {
+      double[] res = new double[size];
+
+      for (int i = 0; i < size; i++) {
+         res[i] = mat1[i] + theVal;
+      }
+
+      return res;
+   }
+   
+   
    
    /*Getters and setters*/
    
@@ -189,6 +284,22 @@ public class MatrixSolver {
 
    public double[][] getAugmentedMatrix() {
       return augmentedMatrix;
+   }
+
+   public double[] getM1() {
+      return m1;
+   }
+
+   public void setM1(double[] m1) {
+      this.m1 = m1;
+   }
+
+   public double[] getM2() {
+      return m2;
+   }
+
+   public void setM2(double[] m2) {
+      this.m2 = m2;
    }
    
    

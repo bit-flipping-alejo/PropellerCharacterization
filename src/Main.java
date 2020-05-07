@@ -23,7 +23,7 @@ public class Main {
    }
 
    public static void showAirfoil() {
-      AirfoilGeometry ag = new AirfoilGeometry(2.5);
+      AirfoilGeometry ag = new AirfoilGeometry(1);
 
       ag.setangleOfAttackRad(5 * (Math.PI/180));
 
@@ -157,15 +157,18 @@ public class Main {
 
    public static void testVPMSolver() {
       AirfoilGeometry ag = new AirfoilGeometry(1);
+      
       ag.setangleOfAttackRad(5 * (Math.PI/180));
+      
       ag.becomeNACA4Series(2,4,1,2);
       ag.generateControlPoints();
       
       VortexPanelSolver vpm = new VortexPanelSolver(ag);
       vpm.setVinfinity(1);
+      vpm.setRho(1.225); // @sea level
       vpm.runVPMSolver();
       
-      vpm.solveForTangentialVelocAndCp();
+      vpm.solveForVtCpCnCaClCdCm();
       
       double[] xHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
       double[] xLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
@@ -190,7 +193,16 @@ public class Main {
       XYSeries series = chart.addSeries("cpLow", xLow, cpLow);
       series.setMarker(SeriesMarkers.DIAMOND);
       
+      
+      System.out.println("=== Results ===");
+      System.out.println("Cl: " + vpm.getCl()  );
+      System.out.println("Cm: " + vpm.getCm() );
+      System.out.println(  );
+      
+      
       new SwingWrapper(chart).displayChart();
+      
+      
       
    }
 }

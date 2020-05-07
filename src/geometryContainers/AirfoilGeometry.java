@@ -124,7 +124,8 @@ public class AirfoilGeometry {
          }
 
       }
-
+      
+      /*
       //AoA Correction
       double aoaX = Math.cos(this.angleOfAttackRad);
       double aoaY = Math.sin(this.angleOfAttackRad);
@@ -136,7 +137,7 @@ public class AirfoilGeometry {
 
       // ensure control points are generated
       this.generateControlPoints();
-
+*/
    }
 
    public double[] getPointCoords(int index){
@@ -163,6 +164,26 @@ public class AirfoilGeometry {
       this.controlPoints[index][1] = y;
    }
    
+   public double getPointX(int index) {
+      return this.points[index][0];
+   }
+   
+   public double[] getAllPointX() {
+      double[] x = new double[this.numberOfCtrlPoints];;
+      for (int i = 0; i < this.numberOfPoints; i++) {
+         x[i] = this.points[i][0];
+      }
+      return x;
+   }
+   
+   public double[] getAllCtrlPointX() {
+      double[] x = new double[this.numberOfCtrlPoints];
+      for (int i = 0; i < this.numberOfCtrlPoints; i++) {
+         x[i] = this.controlPoints[i][0];
+      }
+      return x;
+   }
+   
    /* * * * * * * * * * * * * 
     * Helper functions
     * * * * * * * * * * * * */
@@ -187,7 +208,7 @@ public class AirfoilGeometry {
    private void generateCosSpacing() {
 
       for (int i = 0; i < this.numberOfPoints; i++) {
-         this.points[i][0] = (0.5) * ( Math.cos( (2*Math.PI / this.numberOfPoints) * i) + 1)   ;         
+         this.points[i][0] = (0.5) * ( Math.cos( (2*Math.PI / (this.numberOfPoints)) * i) + 1)   ;         
       }
       /*
       for (int i = 0; i < this.numberOfPoints; i++) {
