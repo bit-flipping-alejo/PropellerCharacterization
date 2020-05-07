@@ -156,6 +156,41 @@ public class Main {
    }
 
    public static void testVPMSolver() {
+      AirfoilGeometry ag = new AirfoilGeometry(1);
+      ag.setangleOfAttackRad(5 * (Math.PI/180));
+      ag.becomeNACA4Series(2,4,1,2);
+      ag.generateControlPoints();
+      
+      VortexPanelSolver vpm = new VortexPanelSolver(ag);
+      vpm.setVinfinity(1);
+      vpm.runVPMSolver();
+      
+      vpm.solveForTangentialVelocAndCp();
+      
+      double[] xHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
+      double[] xLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
+      
+      double[] cps = vpm.getCoeffOfPressure();
+      double[] cpHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
+      double[] cpLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
+      
+      for (int i = 0; i < Math.floor(ag.getNumberOfCtrlPoints()/2); i++) {
+         double [] hightPt = ag.getCtrlCoords(i);
+         double [] lowPt = ag.getCtrlCoords( ag.getNumberOfCtrlPoints() - 1 - i );
+         
+         xHigh[i] = hightPt[0];
+         xLow[i] = lowPt[0];
+         cpHigh[i] = cps[i];
+         cpLow[i] = cps[ag.getNumberOfCtrlPoints() - 1 - i ];
+         
+      }
+      
+      
+      XYChart chart = QuickChart.getChart("Cp v X", "X", "Cp", "cpHigh", xHigh, cpHigh);   
+      XYSeries series = chart.addSeries("cpLow", xLow, cpLow);
+      series.setMarker(SeriesMarkers.DIAMOND);
+      
+      new SwingWrapper(chart).displayChart();
       
    }
 }

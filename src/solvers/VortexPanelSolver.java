@@ -21,8 +21,7 @@ public class VortexPanelSolver {
    private GeometricIntegral geometricIntegral;
    
    private double[] tangentialVeloc;
-   private double[] coeffOfPressure;
-   
+   private double[] coeffOfPressure;  
    private double[] beta;
    
    /* Constructors  */
@@ -168,7 +167,18 @@ public class VortexPanelSolver {
       
    }
    
-   
+   public void solveForTangentialVelocAndCp() {
+
+      for (int i = 0; i < this.airfoil.getNumberOfCtrlPoints(); i++) {
+         double rollingSum = 0;
+         for (int j = 0; j < this.airfoil.getNumberOfCtrlPoints(); j++) {
+            rollingSum -= (this.vortexStrengths[j] / (2 * Math.PI)) * this.geometricIntegral.getNormalIntegralIndex(i, j);
+         }   
+         this.tangentialVeloc[i] = this.Vinfinity * Math.sin( this.beta[i] ) + rollingSum + (this.vortexStrengths[i]/2);
+         this.coeffOfPressure[i] = 1 - Math.pow( (this.tangentialVeloc[i] / this.Vinfinity) , 2);
+      }
+
+   }
    
    
    // Solver helper functions
@@ -214,9 +224,9 @@ public class VortexPanelSolver {
                double B = Math.pow( xi_minus_Xj , 2) + Math.pow( yi_minus_Yj , 2);               
                double Cn = -1 * Math.cos( phi[i] - phi[j] );
                double Ct = Math.sin( phi[j] - phi[i] );               
-               double Dn = xi_minus_Xj * Math.cos(phi[i]) + yi_minus_Yj * Math.sin(phi[j]);
+               double Dn = xi_minus_Xj * Math.cos(phi[i]) + yi_minus_Yj * Math.sin(phi[i]);
                double Dt = xi_minus_Xj * Math.sin(phi[i]) - yi_minus_Yj * Math.cos(phi[i]);               
-               double E = Math.sqrt(B - A);
+               double E = Math.sqrt(B - Math.pow(A, 2));
                
                if ( Double.isNaN(E) ) {
                   E = this.epsilon;
@@ -225,11 +235,11 @@ public class VortexPanelSolver {
 
                double leftHalf =  Math.log( ( (Math.pow(s[j], 2) + 2*A*s[j] + B) / B) );          
                
-               double rightHalf_n = ((Dn - A*Cn)/E) * ( Math.atan2(s[j] + A, E) - Math.atan2(A, E) );                              
-               double rightHalf_t = ((Dt - A*Cn)/E) * ( Math.atan2(s[j] + A, E) - Math.atan2(A, E) );               
+               double rightHalf_n = ((Dn - A*Cn)/E) * ( Math.atan2((s[j] + A), E) - Math.atan2(A, E) );                              
+               double rightHalf_t = ((Dt - A*Cn)/E) * ( Math.atan2((s[j] + A), E) - Math.atan2(A, E) );               
                
-               double normVal = (Cn/2) * ( leftHalf + rightHalf_n ) ;
-               double tanVal = (Ct/2) * ( leftHalf + rightHalf_t ) ;
+               double normVal = ((Cn/2) *  leftHalf) + rightHalf_n  ;
+               double tanVal =  ((Ct/2) *  leftHalf) + rightHalf_t  ;
                
                
                
@@ -237,8 +247,10 @@ public class VortexPanelSolver {
                geomInteg.setTangentialIntegralIndex(i,j, tanVal);
             }
             
+            //System.out.println("Norm: " + geomInteg.getNormalIntegralIndex(i, j) + " | Tang: " + geomInteg.getTangentialIntegralIndex(i, j));
+            
          }
-         
+         //double q = 0;
       }
       
       
@@ -250,6 +262,7 @@ public class VortexPanelSolver {
       
       for (int i = 0; i < this.airfoil.getNumberOfCtrlPoints(); i++) {
          VinfArray[i] = 2*Math.PI*this.Vinfinity*Math.cos(beta[i]);
+         System.out.println("Vinf[" + i + "]: " + VinfArray[i]);
       }
       
       return VinfArray;
