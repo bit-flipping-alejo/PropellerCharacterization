@@ -24,9 +24,9 @@ public class Main {
 
       //testVPMSolverAirfoilFlip();
 
-      testVPMSolverReferencePoints();
+      //testVPMSolverReferencePoints();
 
-      //testVPMSolver();
+      testVPMSolver();
    }
 
    public static void showAirfoil() {
