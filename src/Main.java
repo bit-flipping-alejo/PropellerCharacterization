@@ -1,9 +1,14 @@
 
+
+import java.io.FileReader;
+
 import org.knowm.xchart.QuickChart;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.markers.SeriesMarkers;
+
+import com.opencsv.CSVReader;
 
 import geometryContainers.AirfoilGeometry;
 import solvers.MatrixSolver;
@@ -14,19 +19,59 @@ public class Main {
 
    public static void main(String[] args) {
       //showAirfoil();
-      
+
       //testAGaussElim();
-      
+
       //testVPMSolverAirfoilFlip();
-      
-      testVPMSolver();
+
+      testVPMSolverReferencePoints();
+
+      //testVPMSolver();
    }
 
    public static void showAirfoil() {
-      AirfoilGeometry ag = new AirfoilGeometry(1);
+
+
+      String pathToCsv="/home/captain/sdb/CSUMB/Capstone/sw/ref/pythonVPMCode/pythonPoints.txt";
+
+      double[][] pts = new double[99][2];
+      try { 
+
+         FileReader filereader = new FileReader(pathToCsv); 
+
+         CSVReader csvReader = new CSVReader(filereader); 
+         String[] nextRecord; 
+
+         int ctr = 0;
+         // we are going to read data line by line 
+         while ((nextRecord = csvReader.readNext()) != null) { 
+            Boolean xory = true;
+            for (String cell : nextRecord) { 
+               if (xory) {
+                  pts[ctr][0] = Double.parseDouble(cell);
+                  System.out.print("(" + Double.parseDouble(cell) + ","); 
+               } else {
+                  pts[ctr][1] = Double.parseDouble(cell);
+                  System.out.print(Double.parseDouble(cell) + ")"); 
+               }
+               xory = ! xory;  
+
+            } 
+            ctr+=1;
+            System.out.println(); 
+         } 
+      } 
+      catch (Exception e) { 
+         e.printStackTrace(); 
+      } 
+
+
+
+      AirfoilGeometry ag = new AirfoilGeometry(1, 100);
+      AirfoilGeometry ag2 = new AirfoilGeometry(99, pts);
 
       ag.setangleOfAttackRad(5 * (Math.PI/180));
-
+      ag2.setangleOfAttackRad(5 * (Math.PI/180));
       ag.becomeNACA4Series(2,4,1,2);
       ag.generateControlPoints();
 
@@ -34,82 +79,85 @@ public class Main {
       double x[] = new double [ag.getNumberOfPoints()];
       double y[] = new double [ag.getNumberOfPoints()];
 
-      double xc[] = new double [ag.getNumberOfPoints() - 1];
-      double yc[] = new double [ag.getNumberOfPoints() - 1];
+      double xc[] = new double [ag.getNumberOfPoints()-1];
+      double yc[] = new double [ag.getNumberOfPoints()-1];
 
       double thePts[][] = ag.getPoints();
-      double ctrlPts[][] = ag.getControlPoints();
+      //double ctrlPts[][] = ag.getControlPoints();
 
       for (int i = 0; i < ag.getNumberOfPoints(); i++) {
          x[i] = thePts[i][0];
          y[i] = thePts[i][1];
 
          if (i != ag.getNumberOfPoints() - 1) {
-            xc[i] = ctrlPts[i][0];
-            yc[i] = ctrlPts[i][1];
+            xc[i] = pts[i][0];
+            yc[i] = pts[i][1];
          } 
 
-        
+
       }
       //https://knowm.org/javadocs/xchart/index.html
-      XYChart chart = QuickChart.getChart("your airfoil", "cord location", "thickness", "airfoil points", x, y);      
-      XYSeries series = chart.addSeries("ControlPts", xc, yc);
+      XYChart chart = QuickChart.getChart("your airfoil", "cord location", "thickness", "airfoil points", xc, yc);      
+
+      XYSeries series = chart.addSeries("ControlPts", x, y);
       series.setMarker(SeriesMarkers.DIAMOND);
 
       new SwingWrapper(chart).displayChart();
+
+
+
    }
 
    public static void testAGaussElim() {
       double[][] testA = new double[3][3];
       double[] testB = new double [3];
       MatrixSolver ms = new MatrixSolver();
-      
+
       ms.setNumRows(3);
       ms.setNumCols(3);
-      
+
       testA[0][0] = 2;
       testA[0][1] = 1;
       testA[0][2] = -1;
-      
+
       testA[1][0] = -3;
       testA[1][1] = -1;
       testA[1][2] = 2;
-      
+
       testA[2][0] = -2;
       testA[2][1] = 1;
       testA[2][2] = 2;
-      
+
       testB[0] = 8;
       testB[1] = -11;
       testB[2] = -3;
-      
+
       ms.setA(testA);
       ms.setB(testB);
-      ms.makeAugmentedMatrix();
-      ms.populateAugmentedMatrix();
-      ms.doGaussianElimination();
-      
-      double[][] postA = ms.getAugmentedMatrix();
-      
+
+      ms.doGaussianEliminationNoPivot();
+
+      double[][] postA = ms.getA();
+
       for (int i = 0; i < ms.getNumRows(); i++) {
          for (int j = 0; j < ms.getNumCols(); j++) {
-            
+
             System.out.print(" " + postA[i][j] + " ");
-            
+
          }  
          System.out.println();
       }
-      
-      ms.doBackwardsSubstitution();
+
+
       double[] postX = ms.getX();
-      
+
       System.out.println("-- SOLN --");
       for (int i = 0; i < ms.getNumRows(); i++) {
          System.out.println( i + " : " + postX[i]);
       }
-      
-      
-      
+
+
+
    }
 
    public static void testVPMSolverAirfoilFlip() {
@@ -117,15 +165,15 @@ public class Main {
       ag.setangleOfAttackRad(5 * (Math.PI/180));
       ag.becomeNACA4Series(2,4,1,2);
       ag.generateControlPoints();
-      
+
       VortexPanelSolver vpm = new VortexPanelSolver(ag);
       vpm.setVinfinity(1);
-      
+
       //vpm.runVPMSolver();
-      
+
       AirfoilGeometry postFlip = vpm.getAirfoil();
-      
-      
+
+
       double x[] = new double [postFlip.getNumberOfPoints()];
       double y[] = new double [postFlip.getNumberOfPoints()];
 
@@ -144,7 +192,7 @@ public class Main {
             yc[i] = ctrlPts[i][1];
          } 
 
-        
+
       }
       //https://knowm.org/javadocs/xchart/index.html
       XYChart chart = QuickChart.getChart("your airfoil", "cord location", "thickness", "airfoil points", x, y);      
@@ -152,59 +200,149 @@ public class Main {
       series.setMarker(SeriesMarkers.DIAMOND);
 
       new SwingWrapper(chart).displayChart();
-      
+
    }
 
-   public static void testVPMSolver() {
-      AirfoilGeometry ag = new AirfoilGeometry(1);
-      
+   public static void testVPMSolverReferencePoints() {
+
+      String pathToCsv="/home/captain/sdb/CSUMB/Capstone/sw/ref/pythonVPMCode/pythonPoints.txt";
+
+      double[][] pts = new double[20][2];
+      try { 
+
+         FileReader filereader = new FileReader(pathToCsv); 
+
+         CSVReader csvReader = new CSVReader(filereader); 
+         String[] nextRecord; 
+
+         int ctr = 0;
+         // we are going to read data line by line 
+         while ((nextRecord = csvReader.readNext()) != null) { 
+            Boolean xory = true;
+            for (String cell : nextRecord) { 
+               if (xory) {
+                  pts[ctr][0] = Double.parseDouble(cell);
+                  System.out.print("(" + Double.parseDouble(cell) + ","); 
+               } else {
+                  pts[ctr][1] = Double.parseDouble(cell);
+                  System.out.print(Double.parseDouble(cell) + ")"); 
+               }
+               xory = ! xory;  
+
+            } 
+            ctr+=1;
+            System.out.println(); 
+         } 
+      } 
+      catch (Exception e) { 
+         e.printStackTrace(); 
+      } 
+
+
+      AirfoilGeometry ag = new AirfoilGeometry(20, pts);
+
       ag.setangleOfAttackRad(5 * (Math.PI/180));
-      
-      ag.becomeNACA4Series(2,4,1,2);
+
+      //ag.becomeNACA4Series(2,4,1,2);
       ag.generateControlPoints();
-      
+
       VortexPanelSolver vpm = new VortexPanelSolver(ag);
       vpm.setVinfinity(1);
       vpm.setRho(1.225); // @sea level
       vpm.runVPMSolver();
-      
+
       vpm.solveForVtCpCnCaClCdCm();
-      
+
       double[] xHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
       double[] xLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
-      
+
       double[] cps = vpm.getCoeffOfPressure();
       double[] cpHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
       double[] cpLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
-      
+
       for (int i = 0; i < Math.floor(ag.getNumberOfCtrlPoints()/2); i++) {
          double [] hightPt = ag.getCtrlCoords(i);
          double [] lowPt = ag.getCtrlCoords( ag.getNumberOfCtrlPoints() - 1 - i );
+
          
          xHigh[i] = hightPt[0];
          xLow[i] = lowPt[0];
          cpHigh[i] = cps[i];
          cpLow[i] = cps[ag.getNumberOfCtrlPoints() - 1 - i ];
-         
+
       }
-      
-      
+
+
       XYChart chart = QuickChart.getChart("Cp v X", "X", "Cp", "cpHigh", xHigh, cpHigh);   
       XYSeries series = chart.addSeries("cpLow", xLow, cpLow);
       series.setMarker(SeriesMarkers.DIAMOND);
-      
-      
+
+
       System.out.println("=== Results ===");
       System.out.println("Cl: " + vpm.getCl()  );
       System.out.println("Cm: " + vpm.getCm() );
       System.out.println(  );
-      
-      
+
+
       new SwingWrapper(chart).displayChart();
-      
-      
-      
+
+
+
    }
+
+   public static void testVPMSolver() {
+
+      AirfoilGeometry ag = new AirfoilGeometry(1);
+
+      ag.setangleOfAttackRad(5 * (Math.PI/180));
+
+      ag.becomeNACA4Series(2,4,1,2);
+      ag.generateControlPoints();
+
+      VortexPanelSolver vpm = new VortexPanelSolver(ag);
+      vpm.setVinfinity(1);
+      vpm.setRho(1.225); // @sea level
+      vpm.runVPMSolver();
+
+      vpm.solveForVtCpCnCaClCdCm();
+
+      double[] xHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
+      double[] xLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
+
+      double[] cps = vpm.getCoeffOfPressure();
+      double[] cpHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
+      double[] cpLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
+
+      for (int i = 0; i < Math.floor(ag.getNumberOfCtrlPoints()/2); i++) {
+         double [] hightPt = ag.getCtrlCoords(i);
+         double [] lowPt = ag.getCtrlCoords( ag.getNumberOfCtrlPoints() - 1 - i );
+
+         xHigh[i] = hightPt[0];
+         xLow[i] = lowPt[0];
+         cpHigh[i] = cps[i];
+         cpLow[i] = cps[ag.getNumberOfCtrlPoints() - 1 - i ];
+
+      }
+
+
+      XYChart chart = QuickChart.getChart("Cp v X", "X", "Cp", "cpHigh", xHigh, cpHigh);   
+      XYSeries series = chart.addSeries("cpLow", xLow, cpLow);
+      series.setMarker(SeriesMarkers.DIAMOND);
+
+
+      System.out.println("=== Results ===");
+      System.out.println("Cl: " + vpm.getCl()  );
+      System.out.println("Cm: " + vpm.getCm() );
+      System.out.println(  );
+
+
+      new SwingWrapper(chart).displayChart();
+
+
+
+   }
+
+
 }
 
 

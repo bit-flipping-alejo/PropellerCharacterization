@@ -10,7 +10,7 @@ public class MatrixSolver {
 
    private double[] m1;
    private double[] m2;
-   
+   private int[] ordering;
    
    private double[][] augmentedMatrix;
    
@@ -34,12 +34,27 @@ public class MatrixSolver {
    
    
    
-   /*Gaussian elimination chosen since each Geometric
-    * integral is calculated per point O(n^2) where as
-    * LU Decomposition is performed in O(n^3) but it allows
-    * solutions in O(N^2)*/
+   //Gaussian elimination chosen since each Geometric
+   // integral is calculated per point O(n^2) where as
+   // LU Decomposition is performed in O(n^3) but it allows
+   // solutions in O(N^2)
+   // Augmented matrix is regular A matrix, 
+   // but with n+1 columns, in the n+1th column 
+   // the B matrix resides, this allows all 
+   // elementary operations to be performed
+   // at once
+
 
    public void doGaussianEliminationPivot() {
+      
+      this.makeAugmentedMatrix();
+      this.populateAugmentedMatrix();
+      
+      this.ordering = new int[this.numRows];
+      
+      for (int m = 0; m < this.numRows; m++) {
+         this.ordering[m] = m;
+      }
       
       int h = 0; 
       int k = 0;
@@ -60,6 +75,7 @@ public class MatrixSolver {
          } else {
             // do swap
             this.swapAugmentedRows(h, maxRowNotH);
+            this.swapRows(h, maxRowNotH, this.ordering);
             
             for (int i = h + 1; i < this.numRows; i++) {
                double ratio = this.augmentedMatrix[i][k] / this.augmentedMatrix[h][k];
@@ -75,6 +91,7 @@ public class MatrixSolver {
          } // end if          
       } // end while
       
+      this.doBackwardsSubstitutionPivot();
       
    }
 
@@ -88,65 +105,14 @@ public class MatrixSolver {
       
    }
 
-   public void doGaussianEliminationNoPivot() {
-      for (int i = 0; i < this.numRows-1; i++) {
-         for (int k = i+1; k < this.numCols; k++) {
-            double ratio = this.A[i][k]/this.A[k][k];
-            this.A[i][k] = 0;
-            for (int j = k+1; j < this.numCols; j++) {
-               this.A[i][j] -= (this.A[i][k] * this.A[k][j]);
-            }
-            
-         }
-      }
-   }
-   
-   public void doBackwardsSubstitutionNoPivot() {
-      //https://algowiki-project.org/en/Backward_substitution#General_description_of_the_algorithm
-      this.X = new double[this.numRows];
-      this.B = new double[this.numRows];
-      
-      for (int i = (this.numRows - 1); i >= 0; i-- ) {
-         this.X[i] = B[i];
-         for (int j = i + 1; j < this.numCols; j++) {
-            this.X[i] = this.X[i] - ( this.A[i][j] * this.X[j] );
-         }
-         this.X[i] =   this.X[i] /  this.A[i][i];
-      }
-
-   }
-   
-   //Augmented matrix is regular A matrix, 
-   //but with n+1 columns, in the n+1th column 
-   //the B matrix resides, this allows all 
-   // elementary operations to be performed
-   // at once
-   
-   public void makeAugmentedMatrix() {
-      this.augmentedMatrix = new double[numRows][numCols + 1]; 
-   }
-   
-   public void populateAugmentedMatrix() {      
-      for (int i = 0; i < this.numRows; i++) {   
-         
-         for (int j = 0; j < this.numCols + 1; j++) {
-         
-            if(j == this.numCols) {
-               this.augmentedMatrix[i][j] = this.B[i];
-            } else {
-               this.augmentedMatrix[i][j] = this.A[i][j];
-            }            
-         
-         } // end j      
-         
-      } // end i      
+   private void swapRows(int row1, int row2, int[]matrix) {
+      int tempVal = matrix[row1];
+      matrix[row1] = matrix[row2];
+      matrix[row2] = tempVal;
    }
 
-   /*Backwards substitution is the algo by which 
-    * we take the upper triangular augmented matrix
-    * (after gaussian elim) and solve for the X*/
-
-   public void doBackwardsSubstitution() {
+   
+   private void doBackwardsSubstitutionPivot() {
       //https://algowiki-project.org/en/Backward_substitution#General_description_of_the_algorithm
       this.X = new double[this.numRows];
       this.B = new double[this.numRows];
@@ -164,8 +130,115 @@ public class MatrixSolver {
          }
          this.X[i] =   this.X[i] /  this.augmentedMatrix[i][i];
       }
+      
+      this.reOrderDueToPivots();
+      
+   }   
+   
+   private void reOrderDueToPivots() {
+      
+      double[] newX = new double[this.numRows];
+      
+      for (int i = 0; i < this.numRows; i++) {
+         newX[ this.ordering[i] ] = this.X[this.ordering[i]];
+      }
+      this.X = newX;
+   }
+   
+   private void makeAugmentedMatrix() {
+      this.augmentedMatrix = new double[numRows][numCols + 1]; 
+   }
+   
+   private void populateAugmentedMatrix() {
+      for (int i = 0; i < this.numRows; i++) {   
+         
+         for (int j = 0; j < this.numCols + 1; j++) {
+         
+            if(j == this.numCols) {
+               this.augmentedMatrix[i][j] = this.B[i];
+            } else {
+               this.augmentedMatrix[i][j] = this.A[i][j];
+            }            
+         
+         } // end j      
+         
+      } // end i      
+   }
+
+   
+   
+   
+   public void doGaussianEliminationNoPivot() {
+      for (int i = 0; i < this.numRows-1; i++) {
+         
+         
+         
+         for (int j = i+1; j < this.numCols; j++) {
+            
+            double ratio = this.A[j][i]/this.A[i][i];
+            //this.A[j][i] = 0;
+            
+            for (int k = i; k < this.numCols; k++) {
+               this.A[j][k] -= (this.A[i][k] * ratio);               
+            }
+            this.B[j]-= (ratio * this.B[i]);
+            
+         }
+         
+      }
+      
+      
+      this.doBackwardsSubstitutionNoPivot();
+      
+   }
+   
+   private void doBackwardsSubstitutionNoPivot() {
+      //https://algowiki-project.org/en/Backward_substitution#General_description_of_the_algorithm
+      this.X = new double[this.numRows];
+      
+      
+      for (int i = (this.numRows - 1); i >= 0; i-- ) {
+         this.X[i] = this.B[i];
+         for (int j = i + 1; j < this.numCols; j++) {
+            this.X[i] = this.X[i] - ( this.A[i][j] * this.X[j] );
+         }
+         this.X[i] =   this.X[i] /  this.A[i][i];
+      }
 
    }
+   
+   
+   
+   
+
+   //LU Decomposition 
+   public void doLUDecomposition() {
+      for(int i = 0; i < this.numRows; i++) {
+      
+         for(int j = 0; j < i; j++) {
+            
+            for(int k = 0; k < j; k++) {
+               
+            }
+            
+         }
+         
+         for(int j = i; j < this.numCols; j++) {
+
+         }
+         
+      }
+      
+      
+   }
+
+   
+   
+   
+   
+   
+   
+   
    
    
    

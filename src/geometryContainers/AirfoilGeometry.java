@@ -59,6 +59,16 @@ public class AirfoilGeometry {
       this.points = new double[this.numberOfPoints][this.NUMCOLUMNS];
       this.angleOfAttackRad = this.DEFAULTAOA;
    }
+   
+   public AirfoilGeometry(double cordLen, int numPts) {
+      super();
+      this.numberOfPoints = numPts;        
+      this.cordLength = cordLen; 
+      this.numberOfCtrlPoints= this.numberOfPoints - 1;
+      this.controlPoints = new double[this.numberOfPoints - 1][this.NUMCOLUMNS];
+      this.points = new double[this.numberOfPoints][this.NUMCOLUMNS];
+      this.angleOfAttackRad = this.DEFAULTAOA;
+   }
 
    /* * * * * * * * * * * * * 
     * Naca 4 + 5 series equations
