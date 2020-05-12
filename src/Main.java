@@ -11,6 +11,7 @@ import org.knowm.xchart.style.markers.SeriesMarkers;
 import com.opencsv.CSVReader;
 
 import geometryContainers.AirfoilGeometry;
+import geometryContainers.PropellerGeometry;
 import solvers.MatrixSolver;
 import solvers.VortexPanelSolver;
 
@@ -18,6 +19,32 @@ import solvers.VortexPanelSolver;
 public class Main {
 
    public static void main(String[] args) {
+      //airfoilAndVPMtests();
+      gvtTests();
+   }
+
+   
+   /*GVT Tests*/
+   public static void gvtTests() {
+      showChordProfile();
+   }
+   
+   public static void showChordProfile() {
+      PropellerGeometry pg = new PropellerGeometry();
+      pg.setBladeParams(1.0, 0.1, 2.0, 4.0, 0.4, 3.0);
+      pg.generateChord();
+      
+      double[] theChords = pg.getChords();
+      double[] theRads = pg.getRadiusPoints();
+      
+      XYChart chart = QuickChart.getChart("Blade Profil", "Rad position", "Chord Len", "chord len", theRads, theChords);      
+
+      new SwingWrapper(chart).displayChart();
+   }
+   
+   
+   /*VPM Tests*/
+   public static void airfoilAndVPMtests() {
       //showAirfoil();
 
       //testAGaussElim();
@@ -28,7 +55,7 @@ public class Main {
 
       testVPMSolver();
    }
-
+   
    public static void showAirfoil() {
 
 
@@ -248,7 +275,6 @@ public class Main {
 
       VortexPanelSolver vpm = new VortexPanelSolver(ag);
       vpm.setVinfinity(1);
-      vpm.setRho(1.225); // @sea level
       vpm.runVPMSolver();
 
       vpm.solveForVtCpCnCaClCdCm();
@@ -301,7 +327,7 @@ public class Main {
 
       VortexPanelSolver vpm = new VortexPanelSolver(ag);
       vpm.setVinfinity(1);
-      vpm.setRho(1.225); // @sea level
+      
       vpm.runVPMSolver();
 
       vpm.solveForVtCpCnCaClCdCm();
@@ -333,6 +359,7 @@ public class Main {
       System.out.println("=== Results ===");
       System.out.println("Cl: " + vpm.getCl()  );
       System.out.println("Cm: " + vpm.getCm() );
+      System.out.println("Cd: " + vpm.getCd() );      
       System.out.println(  );
 
 

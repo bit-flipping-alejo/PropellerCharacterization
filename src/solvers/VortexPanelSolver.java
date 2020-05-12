@@ -18,7 +18,7 @@ public class VortexPanelSolver {
    private final double epsilon = .0000001; //max resolution
    
    private double Vinfinity;     // meters per second
-   private double rho;           // density of air 1.225 kg/m3 @ Sea level
+   
    
    private double[] vortexStrengths;   
    private GeometricIntegral geometricIntegral;
@@ -34,6 +34,9 @@ public class VortexPanelSolver {
    private double Cl;
    private double Cm;
    private double[] phi;
+   
+   //if there's time refine Cd using boundary layer eqns
+   private double Cd;
    
    /* Constructors  */
    public VortexPanelSolver() {
@@ -212,6 +215,14 @@ public class VortexPanelSolver {
       
       this.Cl = s1 - s2;
       
+      double[] cnSin = ms.doMatrixMultiplyByConst(this.airfoil.getNumberOfCtrlPoints(), this.Cn, Math.sin(this.airfoil.getangleOfAttackRad()) );
+      double[] caCos = ms.doMatrixMultiplyByConst(this.airfoil.getNumberOfCtrlPoints(), this.Ca, Math.cos(this.airfoil.getangleOfAttackRad()) );
+      
+      double s6 = ms.doSum(this.airfoil.getNumberOfCtrlPoints(), cnSin);
+      double s7 = ms.doSum(this.airfoil.getNumberOfCtrlPoints(), caCos);
+      
+      this.Cd = s6 + s7;
+      
       
       double[] offsetVal = ms.doMatrixAdditionByConst(this.airfoil.getNumberOfCtrlPoints(),this.airfoil.getAllCtrlPointX(), -0.25);
       double[] s3 = ms.doMatrixMultiply( this.airfoil.getNumberOfCtrlPoints() , offsetVal, this.coeffOfPressure);
@@ -370,12 +381,7 @@ public class VortexPanelSolver {
    public void setBeta(double[] beta) {
       this.beta = beta;
    }
-   public double getRho() {
-      return rho;
-   }
-   public void setRho(double rho) {
-      this.rho = rho;
-   }
+   
    public double[] getS() {
       return s;
    }
@@ -400,6 +406,24 @@ public class VortexPanelSolver {
    }
    public void setPhi(double[] phi) {
       this.phi = phi;
+   }
+   public double[] getCn() {
+      return Cn;
+   }
+   public void setCn(double[] cn) {
+      Cn = cn;
+   }
+   public double[] getCa() {
+      return Ca;
+   }
+   public void setCa(double[] ca) {
+      Ca = ca;
+   }
+   public double getCd() {
+      return Cd;
+   }
+   public void setCd(double cd) {
+      Cd = cd;
    }
 
 
