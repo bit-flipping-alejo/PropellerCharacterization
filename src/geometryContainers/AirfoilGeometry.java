@@ -24,6 +24,10 @@ public class AirfoilGeometry {
    private final int NUMCOLUMNS = 2;
    private final int DEFAULTAOA = 0;
 
+// for alpha lift = 0 calc
+   private double[] camberLine;     
+   private double[] cosChordPoints; 
+   private double zeroLiftAlpha;
    /* * * * * * * * * * * * * 
     * Constructors 
     * * * * * * * * * * * * */
@@ -35,8 +39,6 @@ public class AirfoilGeometry {
       this.points = new double[this.numberOfPoints][this.NUMCOLUMNS];      
       this.cordLength = 1;
       this.angleOfAttackRad = this.DEFAULTAOA;
-
-
    }
 
    public AirfoilGeometry(int numberOfPoints, double[][] points) {
@@ -93,7 +95,8 @@ public class AirfoilGeometry {
       double dy_dx = 0;
       double delineationBtnTopAndBtm = Math.floor((this.numberOfPoints ) / 2);
       double theta = 0;
-
+      this.camberLine = new double[this.numberOfPoints]; 
+      
       for (int i = 0; i < this.numberOfPoints; i++) {
 
          x_over_c = (this.points[i][0]);///this.cordLength);
@@ -102,6 +105,7 @@ public class AirfoilGeometry {
                - 0.3516*Math.pow(x_over_c, 2) + 0.2843*Math.pow(x_over_c, 3) 
                - 0.1015*Math.pow(x_over_c, 4) );
 
+         this.camberLine[i] = yt;
          if( i == 0 || i == this.numberOfPoints - 1) {
             yt = 0;
          }
@@ -216,9 +220,10 @@ public class AirfoilGeometry {
 
    /*Private Methods*/   
    private void generateCosSpacing() {
-
+      this.cosChordPoints = new double[this.numberOfPoints];
       for (int i = 0; i < this.numberOfPoints; i++) {
-         this.points[i][0] = (0.5) * ( Math.cos( (2*Math.PI / (this.numberOfPoints)) * i) + 1)   ;         
+         this.cosChordPoints[i] = (2*Math.PI / (this.numberOfPoints)) * i;
+         this.points[i][0] = (0.5) * ( Math.cos( this.cosChordPoints[i] ) + 1)   ;         
       }
       /*
       for (int i = 0; i < this.numberOfPoints; i++) {
@@ -227,6 +232,22 @@ public class AirfoilGeometry {
        */
    }
 
+   // calculate Alpha Lift = 0
+   public void calcZeroLiftAlpha() {
+      double rollingVal = 0.0;
+      
+      // dividing number of points by 2 ensures we go from 0 to PI and not 2PI
+      for (int i = 0; i < Math.floor(this.numberOfPoints / 2); i++) {
+         double dzdx = (this.camberLine[i + 1] - this.camberLine[i]) / (this.points[i + 1][0] - this.points[i][0]);
+         double cosTheta0m1 = Math.cos(this.cosChordPoints[i + 1]) - 1;
+         double dTheta0 = this.cosChordPoints[i + 1] - this.cosChordPoints[i];
+         rollingVal += dzdx * cosTheta0m1 * dTheta0;
+      }
+      
+      this.zeroLiftAlpha = (-1/Math.PI) * rollingVal;
+      
+   }
+   
    
    /* * * * * * * * * * * * * 
     * Getters and Setters 
@@ -280,5 +301,29 @@ public class AirfoilGeometry {
       this.angleOfAttackRad = angleOfAttackRad;
    }
 
+
+   public double[] getCamberLine() {
+      return camberLine;
+   }
+
+   
+   public double[] getCosChordPoints() {
+      return cosChordPoints;
+   }
+
+   
+   public double getZeroLiftAlpha() {
+      return zeroLiftAlpha;
+   }
+
+   public void setZeroLiftAlpha(double zeroLiftAlpha) {
+      this.zeroLiftAlpha = zeroLiftAlpha;
+   }
+
+   
+
+   
+   
+   
 
 }

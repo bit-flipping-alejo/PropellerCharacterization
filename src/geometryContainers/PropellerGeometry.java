@@ -4,17 +4,20 @@ public class PropellerGeometry {
    
    private int numberOfBlades;
    private double startAngleRMT; // start angle for root mean twist
-   private double endAngleRMT; // end angle for root mean twist
-   private double dp;         //Propeller Diameter
-   private double omega;      // rotational speed of propeller
+   private double endAngleRMT;   // end angle for root mean twist
+   private double dp;            //Propeller Diameter
+   private double omega;         // rotational speed of propeller
    private int numDescPoints;
    private final int DEFAULT_NUM_PTS = 10;
-   private double[] rmtAngle; //
+   private double[] rmtAngle;    // in rad
    
    enum RMTTYPE{
       LINEAR,
       LOG;
    }
+   
+   private RMTTYPE rmtType;
+   
    
    private double hubDiameterPerc;
    
@@ -26,24 +29,32 @@ public class PropellerGeometry {
    private double[] chords;
    private double[] radiusPoints;
    
+   
+   
    public PropellerGeometry() {
       this.numDescPoints = this.DEFAULT_NUM_PTS;
       this.chords = new double[this.numDescPoints];
       this.radiusPoints = new double[this.numDescPoints];
+      this.rmtType = RMTTYPE.LINEAR;
+      
    }
    
    public PropellerGeometry(int descPts) {
       this.numDescPoints = descPts;
       this.chords = new double[this.numDescPoints];
       this.radiusPoints = new double[this.numDescPoints];
+      this.rmtType = RMTTYPE.LINEAR;
+      
    }
    
-   public void setBladeParams(double propDia, double hubDiaPerc, 
-         double hubChordLen,  double maxChordLen, double maxChordPerc, 
-         double tipChordLen) {
-      
+   public void setRadialParameters(double propDia, double hubDiaPerc) {
       this.dp = propDia;
       this.hubDiameterPerc = hubDiaPerc;
+   }
+   
+   public void setBladeParams(double hubChordLen,  double maxChordLen, 
+         double maxChordPerc, double tipChordLen) {
+
       this.hubChordLen = hubChordLen;
       this.maxChordLen = maxChordLen;
       this.maxChordPerc = maxChordPerc;
@@ -51,7 +62,7 @@ public class PropellerGeometry {
       
    }
    
-   public void generateChord() {
+   public void generateChordLengths() {
       double diaMinusHub = (this.dp - (this.dp * this.hubDiameterPerc));
       double incPerIter = diaMinusHub/(this.numDescPoints - 1);
       double maxChordPoint = Math.floor((diaMinusHub * this.maxChordPerc ) / incPerIter) ;
@@ -67,10 +78,33 @@ public class PropellerGeometry {
       
    }
 
+   // in degrees
+   public void setRmtParametersDeg(double startAngle, double endAngle) {      
+      this.startAngleRMT = startAngle * (Math.PI/180);
+      this.endAngleRMT = endAngle * (Math.PI/180);
+   }
+   
+   public void generateRmtAngles() {
+      this.rmtAngle = new double[this.numDescPoints];
+            
+      for (int i = 0; i < this.numDescPoints; i++) {
+         this.rmtAngle[i] = this.startAngleRMT + ((this.endAngleRMT - this.startAngleRMT) * ( (double) i /  (double) (this.numDescPoints - 1)));
+         //System.out.println(this.rmtAngle[i]);
+      }
+      
+   }
    
    
-   
-   
+   public void generateRadialPositions() {
+      double hubRadius = (this.dp * this.hubDiameterPerc);
+      double diaMinusHub = (this.dp - hubRadius);
+      double incPerIter = diaMinusHub/(this.numDescPoints - 1);
+      
+      for (int i = 0; i < this.numDescPoints; i++) {
+         this.radiusPoints[i] = hubRadius + ((double) i) * incPerIter;
+         System.out.println(this.radiusPoints[i]);
+      }
+   }
    
    
    
@@ -191,6 +225,14 @@ public class PropellerGeometry {
 
    public void setRadiusPoints(double[] radiusPoints) {
       this.radiusPoints = radiusPoints;
+   }
+
+   public RMTTYPE getRmtType() {
+      return rmtType;
+   }
+
+   public void setRmtType(RMTTYPE rmtType) {
+      this.rmtType = rmtType;
    }
    
    

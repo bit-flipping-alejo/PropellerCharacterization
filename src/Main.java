@@ -19,29 +19,46 @@ import solvers.VortexPanelSolver;
 public class Main {
 
    public static void main(String[] args) {
-      //airfoilAndVPMtests();
-      gvtTests();
+      airfoilAndVPMtests();
+      //gvtTests();
    }
 
    
    /*GVT Tests*/
    public static void gvtTests() {
-      showChordProfile();
+      //showChordProfile();
+      
+      calcRMTAngles();
    }
    
    public static void showChordProfile() {
       PropellerGeometry pg = new PropellerGeometry();
-      pg.setBladeParams(1.0, 0.1, 2.0, 4.0, 0.4, 3.0);
-      pg.generateChord();
+      pg.setRadialParameters(1.0, 0.1);
+      pg.setBladeParams(2.0, 4.0, 0.4, 3.0);
+      pg.generateChordLengths();
       
       double[] theChords = pg.getChords();
       double[] theRads = pg.getRadiusPoints();
       
-      XYChart chart = QuickChart.getChart("Blade Profil", "Rad position", "Chord Len", "chord len", theRads, theChords);      
+      XYChart chart = QuickChart.getChart("Blade Profile", "Rad position", "Chord Len", "chord len", theRads, theChords);      
 
       new SwingWrapper(chart).displayChart();
    }
    
+   public static void calcRMTAngles() {
+      PropellerGeometry pg = new PropellerGeometry();
+      pg.setRmtParametersDeg(10, 3);
+      pg.setRadialParameters(1.0, 0.1);
+      pg.generateRmtAngles();
+      pg.generateRadialPositions();
+      
+      double[] theAngles = pg.getRmtAngle();
+      double[] theRads = pg.getRadiusPoints();
+      
+      XYChart chart = QuickChart.getChart("RMT Angle", "Rad position", "RMT ()rad)", "RMT", theRads, theAngles);      
+
+      new SwingWrapper(chart).displayChart();
+   }
    
    /*VPM Tests*/
    public static void airfoilAndVPMtests() {
@@ -53,7 +70,9 @@ public class Main {
 
       //testVPMSolverReferencePoints();
 
-      testVPMSolver();
+      //testVPMSolver();
+      
+      testCamberline();
    }
    
    public static void showAirfoil() {
@@ -105,7 +124,8 @@ public class Main {
 
       double x[] = new double [ag.getNumberOfPoints()];
       double y[] = new double [ag.getNumberOfPoints()];
-
+      double camb[] = ag.getCamberLine();
+      
       double xc[] = new double [ag.getNumberOfPoints()-1];
       double yc[] = new double [ag.getNumberOfPoints()-1];
 
@@ -129,6 +149,8 @@ public class Main {
       XYSeries series = chart.addSeries("ControlPts", x, y);
       series.setMarker(SeriesMarkers.DIAMOND);
 
+      XYSeries series2 = chart.addSeries("CamberLine", x, camb);
+      
       new SwingWrapper(chart).displayChart();
 
 
@@ -369,6 +391,24 @@ public class Main {
 
    }
 
+   public static void testCamberline(){
+      AirfoilGeometry ag = new AirfoilGeometry();      
+      ag.setangleOfAttackRad(5 * (Math.PI/180));
+      ag.becomeNACA4Series(2, 4, 1, 2);
+      double camb[] = ag.getCamberLine();
+      double chord[] = ag.getCosChordPoints();
+      
+      ag.calcZeroLiftAlpha();
+      
+      System.out.println("=== Zero lift alpha ==");
+      System.out.println( "Rad: " + ag.getZeroLiftAlpha() );
+      System.out.println( "Deg: " + (ag.getZeroLiftAlpha() * (180/Math.PI) ) );
+      
+      
+      XYChart chart = QuickChart.getChart("NACA 2412 Chord (0 -> pi -> 2pi)", "cord location", "thickness", "airfoil points", chord, camb);      
+      new SwingWrapper(chart).displayChart();
+      
+   }
 
 }
 
