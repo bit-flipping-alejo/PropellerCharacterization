@@ -32,6 +32,8 @@ public class AirfoilGeometry {
     * Constructors 
     * * * * * * * * * * * * */
    
+   private String airfoilType;
+   
    public AirfoilGeometry() {
       this.numberOfPoints = this.DEFAULTNUMPOINTS;            
       this.numberOfCtrlPoints= this.numberOfPoints - 1; 
@@ -81,6 +83,10 @@ public class AirfoilGeometry {
       //https://en.wikipedia.org/wiki/NACA_airfoil#Equation_for_a_symmetrical_4-digit_NACA_airfoil
       //http://www.aerospaceweb.org/question/airfoils/q0100.shtml
       //http://www.aerospaceweb.org/question/airfoils/q0041.shtml
+      
+      int airfoilTypeInt = (nacaNumber1 * 1000) + (nacaNumber2 * 100) + (nacaNumber3 * 10) + nacaNumber4;
+      this.airfoilType = Integer.toString(airfoilTypeInt);
+      
       this.generateCosSpacing();
 
       double m = (double) nacaNumber1 / 100.0;
@@ -106,10 +112,10 @@ public class AirfoilGeometry {
                - 0.1015*Math.pow(x_over_c, 4) );
 
          this.camberLine[i] = yt;
-         if( i == 0 || i == this.numberOfPoints - 1) {
+         /*if( i == 0 || i == this.numberOfPoints - 1) {
             yt = 0;
          }
-
+*/
          if (x_over_c <  p ) {
             // less than point of max camber                        
             yc = (m/ Math.pow(p, 2)) * (2*p*x_over_c - Math.pow(x_over_c, 2) );         
@@ -126,32 +132,25 @@ public class AirfoilGeometry {
 
          if (i > delineationBtnTopAndBtm) { // ensures panels are made clockwise
             //xUpper
-            this.points[i][0] = (x_over_c - yt * Math.sin(theta)) * this.cordLength;             
+            this.points[i][0] = (x_over_c - yt * Math.sin(theta)) ;             
             //yUpper
             this.points[i][1] = yc + yt * Math.cos(theta);
 
          } else {
             // xLower
-            this.points[i][0] = (x_over_c + yt * Math.sin(theta)) * this.cordLength;             
+            this.points[i][0] = (x_over_c + yt * Math.sin(theta)) ;             
             //yLower
             this.points[i][1] = yc - yt * Math.cos(theta);                        
          }
 
       }
       
-      /*
-      //AoA Correction
-      double aoaX = Math.cos(this.angleOfAttackRad);
-      double aoaY = Math.sin(this.angleOfAttackRad);
-      for (int i = 0; i < this.numberOfPoints; i++) {
-         this.points[i][0] = this.points[i][0] * aoaX;
-         //yUpper
-         this.points[i][1] = this.points[i][1] - this.points[i][0]*aoaY;
-      }
+      //this.points[this.numberOfPoints - 1][0] = this.points[0][0];
+      //this.points[this.numberOfPoints - 1][1] = this.points[0][1];
 
       // ensure control points are generated
       this.generateControlPoints();
-*/
+
    }
 
    public double[] getPointCoords(int index){
@@ -232,12 +231,13 @@ public class AirfoilGeometry {
        */
    }
 
+   /*
    // calculate Alpha Lift = 0
    public void calcZeroLiftAlpha() {
       double rollingVal = 0.0;
       
       // dividing number of points by 2 ensures we go from 0 to PI and not 2PI
-      for (int i = 0; i < Math.floor(this.numberOfPoints / 2); i++) {
+      for (int i = 0; i < this.numberOfPoints - 1; i++) {
          double dzdx = (this.camberLine[i + 1] - this.camberLine[i]) / (this.points[i + 1][0] - this.points[i][0]);
          double cosTheta0m1 = Math.cos(this.cosChordPoints[i + 1]) - 1;
          double dTheta0 = this.cosChordPoints[i + 1] - this.cosChordPoints[i];
@@ -247,7 +247,7 @@ public class AirfoilGeometry {
       this.zeroLiftAlpha = (-1/Math.PI) * rollingVal;
       
    }
-   
+ */  
    
    /* * * * * * * * * * * * * 
     * Getters and Setters 
@@ -318,6 +318,15 @@ public class AirfoilGeometry {
 
    public void setZeroLiftAlpha(double zeroLiftAlpha) {
       this.zeroLiftAlpha = zeroLiftAlpha;
+   }
+
+   
+   public String getAirfoilType() {
+      return airfoilType;
+   }
+
+   public void setAirfoilType(String airfoilType) {
+      this.airfoilType = airfoilType;
    }
 
    

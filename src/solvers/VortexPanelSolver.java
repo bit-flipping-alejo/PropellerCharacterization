@@ -168,8 +168,10 @@ public class VortexPanelSolver {
 
       this.vortexStrengths = matrixSolver.getX();
       
-      System.out.println("done with solver");
-
+      //System.out.println("done with solver");
+      
+      this.solveForVtCpCnCaClCdCm();
+      
    }
 
    public void solveForTangentialVelocAndCp(double[] gamma) {
@@ -184,11 +186,12 @@ public class VortexPanelSolver {
       }
 
    }
-   public void solveForVtCpCnCaClCdCm() {
+   private void solveForVtCpCnCaClCdCm() {
 
       this.Cn = new double[this.airfoil.getNumberOfCtrlPoints()];
       this.Ca = new double[this.airfoil.getNumberOfCtrlPoints()];
-      
+      this.tangentialVeloc = new double[this.airfoil.getNumberOfCtrlPoints()];
+      this.coeffOfPressure = new double[this.airfoil.getNumberOfCtrlPoints()];
       
       for (int i = 0; i < this.airfoil.getNumberOfCtrlPoints(); i++) {
          double rollingSum = 0;

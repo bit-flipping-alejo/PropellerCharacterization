@@ -12,6 +12,7 @@ import com.opencsv.CSVReader;
 
 import geometryContainers.AirfoilGeometry;
 import geometryContainers.PropellerGeometry;
+import solvers.GoldsteinVortexTheorySolver;
 import solvers.MatrixSolver;
 import solvers.VortexPanelSolver;
 
@@ -19,8 +20,8 @@ import solvers.VortexPanelSolver;
 public class Main {
 
    public static void main(String[] args) {
-      airfoilAndVPMtests();
-      //gvtTests();
+      //airfoilAndVPMtests();
+      gvtTests();
    }
 
    
@@ -28,13 +29,17 @@ public class Main {
    public static void gvtTests() {
       //showChordProfile();
       
-      calcRMTAngles();
+      //calcRMTAngles();
+      
+      //testZeroLiftAlphaCalc();
+      
+      testBetaCalc();
    }
    
    public static void showChordProfile() {
       PropellerGeometry pg = new PropellerGeometry();
-      pg.setRadialParameters(1.0, 0.1);
-      pg.setBladeParams(2.0, 4.0, 0.4, 3.0);
+      pg.setRadialParameters(2.0, 0.1);
+      pg.setChordParams(2.0, 4.0, 0.4, 3.0);
       pg.generateChordLengths();
       
       double[] theChords = pg.getChords();
@@ -48,8 +53,7 @@ public class Main {
    public static void calcRMTAngles() {
       PropellerGeometry pg = new PropellerGeometry();
       pg.setRmtParametersDeg(10, 3);
-      pg.setRadialParameters(1.0, 0.1);
-      pg.generateRmtAngles();
+      pg.setRadialParameters(2.0, 0.1);
       pg.generateRadialPositions();
       
       double[] theAngles = pg.getRmtAngle();
@@ -58,6 +62,46 @@ public class Main {
       XYChart chart = QuickChart.getChart("RMT Angle", "Rad position", "RMT ()rad)", "RMT", theRads, theAngles);      
 
       new SwingWrapper(chart).displayChart();
+   }
+   
+   public static void testZeroLiftAlphaCalc() {
+      AirfoilGeometry ag = new AirfoilGeometry(1,100);      
+      ag.setangleOfAttackRad(5 * (Math.PI/180));
+      ag.becomeNACA4Series(2, 4, 1, 2);
+      ag.generateControlPoints();
+      
+      GoldsteinVortexTheorySolver gvt = new GoldsteinVortexTheorySolver();
+      
+      double zla = gvt.calculateZeroLiftAlpha(.0001, ag);
+      
+      System.out.println("=== Zero Lift Alpha ===");
+      System.out.println("Alpha : " + (zla * 180 / Math.PI));
+      
+      
+   }
+   
+   public static void testBetaCalc() {
+      
+      AirfoilGeometry af = new AirfoilGeometry();
+      af.becomeNACA4Series(2, 4, 1, 2);
+      
+      PropellerGeometry pg = new PropellerGeometry();
+      pg.setRadialParameters(2.0, 0.1);
+      pg.setRmtParametersDeg(10, 5);
+      pg.generateRadialPositions();
+      pg.setRadialPtsToSameAirfoil(af);
+      
+      
+      GoldsteinVortexTheorySolver gvt = new GoldsteinVortexTheorySolver();
+      gvt.setPropeller(pg);
+      gvt.calculateBeta_tip();
+      
+      double[] theBeta = gvt.getBeta_tip();
+      double[] theLoc =pg.getRadiusPoints();
+      
+      XYChart chart = QuickChart.getChart("Beta tip Angles", "cord location", "Beta_tip", "Beta_tip",  theLoc, theBeta);      
+      new SwingWrapper(chart).displayChart();
+      
    }
    
    /*VPM Tests*/
@@ -70,9 +114,8 @@ public class Main {
 
       //testVPMSolverReferencePoints();
 
-      //testVPMSolver();
-      
-      testCamberline();
+      testVPMSolver();
+            
    }
    
    public static void showAirfoil() {
@@ -80,7 +123,7 @@ public class Main {
 
       String pathToCsv="/home/captain/sdb/CSUMB/Capstone/sw/ref/pythonVPMCode/pythonPoints.txt";
 
-      double[][] pts = new double[99][2];
+      double[][] pts = new double[200][2];
       try { 
 
          FileReader filereader = new FileReader(pathToCsv); 
@@ -95,10 +138,10 @@ public class Main {
             for (String cell : nextRecord) { 
                if (xory) {
                   pts[ctr][0] = Double.parseDouble(cell);
-                  System.out.print("(" + Double.parseDouble(cell) + ","); 
+                  //System.out.print("(" + Double.parseDouble(cell) + ","); 
                } else {
                   pts[ctr][1] = Double.parseDouble(cell);
-                  System.out.print(Double.parseDouble(cell) + ")"); 
+                  //System.out.print(Double.parseDouble(cell) + ")"); 
                }
                xory = ! xory;  
 
@@ -113,8 +156,9 @@ public class Main {
 
 
 
-      AirfoilGeometry ag = new AirfoilGeometry(1, 100);
-      AirfoilGeometry ag2 = new AirfoilGeometry(99, pts);
+      AirfoilGeometry ag = new AirfoilGeometry(1, 200);
+      
+      AirfoilGeometry ag2 = new AirfoilGeometry(200, pts);
 
       ag.setangleOfAttackRad(5 * (Math.PI/180));
       ag2.setangleOfAttackRad(5 * (Math.PI/180));
@@ -126,8 +170,8 @@ public class Main {
       double y[] = new double [ag.getNumberOfPoints()];
       double camb[] = ag.getCamberLine();
       
-      double xc[] = new double [ag.getNumberOfPoints()-1];
-      double yc[] = new double [ag.getNumberOfPoints()-1];
+      double xc[] = new double [ag.getNumberOfPoints()];
+      double yc[] = new double [ag.getNumberOfPoints()];
 
       double thePts[][] = ag.getPoints();
       //double ctrlPts[][] = ag.getControlPoints();
@@ -136,23 +180,24 @@ public class Main {
          x[i] = thePts[i][0];
          y[i] = thePts[i][1];
 
-         if (i != ag.getNumberOfPoints() - 1) {
+         //if (i != ag.getNumberOfPoints() - 1) {
             xc[i] = pts[i][0];
             yc[i] = pts[i][1];
-         } 
+         //} 
 
 
       }
       //https://knowm.org/javadocs/xchart/index.html
-      XYChart chart = QuickChart.getChart("your airfoil", "cord location", "thickness", "airfoil points", xc, yc);      
-
-      XYSeries series = chart.addSeries("ControlPts", x, y);
-      series.setMarker(SeriesMarkers.DIAMOND);
-
-      XYSeries series2 = chart.addSeries("CamberLine", x, camb);
-      
+      XYChart chart = QuickChart.getChart("XFOIL", "cord location", "thickness", "airfoil points", xc, yc);      
+      XYSeries series = chart.addSeries("your  Pts", x, y);            
       new SwingWrapper(chart).displayChart();
-
+      
+      
+      //XYChart chart = QuickChart.getChart("your airfoil", "cord location", "thickness", "airfoil points", x, y);      
+      //new SwingWrapper(chart).displayChart();
+      
+      //XYChart chart = QuickChart.getChart("XFOIL", "cord location", "thickness", "xfoil points", xc, yc);      
+      //new SwingWrapper(chart).displayChart();
 
 
    }
@@ -256,7 +301,7 @@ public class Main {
 
       String pathToCsv="/home/captain/sdb/CSUMB/Capstone/sw/ref/pythonVPMCode/pythonPoints.txt";
 
-      double[][] pts = new double[20][2];
+      double[][] pts = new double[200][2];
       try { 
 
          FileReader filereader = new FileReader(pathToCsv); 
@@ -288,7 +333,7 @@ public class Main {
       } 
 
 
-      AirfoilGeometry ag = new AirfoilGeometry(20, pts);
+      AirfoilGeometry ag = new AirfoilGeometry(200, pts);
 
       ag.setangleOfAttackRad(5 * (Math.PI/180));
 
@@ -299,7 +344,7 @@ public class Main {
       vpm.setVinfinity(1);
       vpm.runVPMSolver();
 
-      vpm.solveForVtCpCnCaClCdCm();
+      //vpm.solveForVtCpCnCaClCdCm();
 
       double[] xHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
       double[] xLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
@@ -340,7 +385,7 @@ public class Main {
 
    public static void testVPMSolver() {
 
-      AirfoilGeometry ag = new AirfoilGeometry(1);
+      AirfoilGeometry ag = new AirfoilGeometry(1, 300);
 
       ag.setangleOfAttackRad(5 * (Math.PI/180));
 
@@ -352,7 +397,7 @@ public class Main {
       
       vpm.runVPMSolver();
 
-      vpm.solveForVtCpCnCaClCdCm();
+      //vpm.solveForVtCpCnCaClCdCm();
 
       double[] xHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
       double[] xLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
@@ -361,7 +406,7 @@ public class Main {
       double[] cpHigh = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
       double[] cpLow = new double[(int) Math.floor(ag.getNumberOfCtrlPoints()/2)];
 
-      for (int i = 0; i < Math.floor(ag.getNumberOfCtrlPoints()/2); i++) {
+      for (int i = 0; i < Math.ceil(ag.getNumberOfCtrlPoints()/2); i++) {
          double [] hightPt = ag.getCtrlCoords(i);
          double [] lowPt = ag.getCtrlCoords( ag.getNumberOfCtrlPoints() - 1 - i );
 
@@ -391,24 +436,7 @@ public class Main {
 
    }
 
-   public static void testCamberline(){
-      AirfoilGeometry ag = new AirfoilGeometry();      
-      ag.setangleOfAttackRad(5 * (Math.PI/180));
-      ag.becomeNACA4Series(2, 4, 1, 2);
-      double camb[] = ag.getCamberLine();
-      double chord[] = ag.getCosChordPoints();
-      
-      ag.calcZeroLiftAlpha();
-      
-      System.out.println("=== Zero lift alpha ==");
-      System.out.println( "Rad: " + ag.getZeroLiftAlpha() );
-      System.out.println( "Deg: " + (ag.getZeroLiftAlpha() * (180/Math.PI) ) );
-      
-      
-      XYChart chart = QuickChart.getChart("NACA 2412 Chord (0 -> pi -> 2pi)", "cord location", "thickness", "airfoil points", chord, camb);      
-      new SwingWrapper(chart).displayChart();
-      
-   }
+   
 
 }
 
