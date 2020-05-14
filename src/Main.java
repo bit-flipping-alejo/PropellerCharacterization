@@ -33,7 +33,9 @@ public class Main {
       
       //testZeroLiftAlphaCalc();
       
-      testBetaCalc();
+      //testBetaCalc();
+      
+      testRunGVT();
    }
    
    public static void showChordProfile() {
@@ -101,6 +103,29 @@ public class Main {
       
       XYChart chart = QuickChart.getChart("Beta tip Angles", "cord location", "Beta_tip", "Beta_tip",  theLoc, theBeta);      
       new SwingWrapper(chart).displayChart();
+      
+   }
+   
+   public static void testRunGVT() {
+      AirfoilGeometry af = new AirfoilGeometry();
+      af.becomeNACA4Series(2, 4, 1, 2);
+      
+      PropellerGeometry pg = new PropellerGeometry();
+      pg.setNumberOfBlades(2);
+      pg.setRadialParameters(2.0, 0.1);
+      pg.setRmtParametersDeg(10, 5);
+      pg.generateRadialPositions();
+      pg.setRadialPtsToSameAirfoil(af);
+      pg.setOmega(700); // radians per second
+      pg.setChordParams(2.0, 4.0, 0.4, 3.0);
+      pg.generateChordLengths();
+      
+      GoldsteinVortexTheorySolver gvt = new GoldsteinVortexTheorySolver();
+      gvt.setPropeller(pg);
+      gvt.setVinf(100); // m/s
+      gvt.calculateBeta_tip();
+      
+      gvt.runGVT();
       
    }
    

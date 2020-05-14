@@ -8,7 +8,8 @@ public class GoldsteinVortexTheorySolver {
    
    
    private double Vinf;       // forward speed of propeller disc
-   private double[] beta_tip;     // Aerodynamic pitch angle   
+   private double[] beta_tip;     // Aerodynamic pitch angle  
+   private double[] beta_aero;
    private double[] eps_i;    // advance angle, induced angle <-- target of this whole analysis
    private double[] eps_inf;  // total downwash angle
    private double[] eps_b;    // downwash angle   
@@ -33,15 +34,21 @@ public class GoldsteinVortexTheorySolver {
    
    
    
-   public GoldsteinVortexTheorySolver() { }
+   
+   
+   public GoldsteinVortexTheorySolver() { 
+      this.vpm = new VortexPanelSolver();
+   }
    
    public GoldsteinVortexTheorySolver(PropellerGeometry prop) { 
       this.propeller = prop;
+      this.vpm = new VortexPanelSolver();
    }
    
    public GoldsteinVortexTheorySolver(PropellerGeometry prop, double Vinfinity) { 
       this.propeller = prop;
       this.Vinf = Vinfinity;
+      this.vpm = new VortexPanelSolver();
    }
    
    public double calculateZeroLiftAlpha(double eps, AirfoilGeometry af) {
@@ -121,7 +128,8 @@ public class GoldsteinVortexTheorySolver {
       //-- Lambda from eqn 2.2.2
       double[] lambda = new double[this.propeller.getNumDescPoints()];
       for(int i = 0; i < this.propeller.getNumDescPoints(); i++) {
-         lambda[i] = 2 * Math.PI * this.propeller.getDp() * Math.tan(this.beta_tip[i]);
+         //lambda[i] = 2 * Math.PI * (this.propeller.getDp()/2.0) * Math.tan(this.beta_tip[i]);
+         lambda[i] = 2 * Math.PI * (this.propeller.getRadiusPointIndex(i)) * Math.tan(this.beta_tip[i]);         
       }
 
       //-- k from eqn 2.3.41
@@ -137,12 +145,99 @@ public class GoldsteinVortexTheorySolver {
       }
       
       //-- beta from eqn 2.3.41
-      double[] beta_aero = new double[this.propeller.getNumDescPoints()];
+      this.beta_aero = new double[this.propeller.getNumDescPoints()];
       for(int i = 0; i < this.propeller.getNumDescPoints(); i++) {
          beta_aero[i] = Math.atan2(k[i], (Math.PI * zeta[i]) );
       }
       
-
+      //-- Advance ration [J] eqn 2.3.42
+      double J = 0.0;
+      J = (2 * Math.PI * this.Vinf) / (this.propeller.getDp() * this.propeller.getOmega());
+      
+      
+      //-- total down wash angle per 2.3.40
+      this.eps_inf = new double[this.propeller.getNumDescPoints()];
+      for(int i = 0; i < this.propeller.getNumDescPoints(); i++) {
+         this.eps_inf[i] = Math.atan2(J, (Math.PI * zeta[i]) );
+      }
+      
+      //-- Chord len ratio
+      double[] cbhat = new double[this.propeller.getNumDescPoints()];
+      for(int i = 0; i < this.propeller.getNumDescPoints(); i++) {
+         cbhat[i] = (this.propeller.getNumberOfBlades() * this.propeller.getChordsAtIndex(i)) / this.propeller.getDp();
+      }
+      
+      //Get section Cl and Cd
+      this.calculateVPMParameters();
+      
+      
+      
+      for(int i = 0; i < this.propeller.getNumDescPoints(); i++) {
+         
+         double zeroGuess1 = this.propeller.getStartAngleRMT() / 3;
+         double zeroGuess2 = this.propeller.getEndAngleRMT() / 3;
+         
+         while (true) {
+            double currG1Val = getInducedEpsilonEqnOutput(i , zeroGuess1, cbhat[i], zeta[i] );
+            double currG2Val = getInducedEpsilonEqnOutput(i , zeroGuess2, cbhat[i], zeta[i] );
+            
+            if(Math.abs(currG1Val) < this.epsilon ) {
+               break;
+            }
+            
+            double lastGuess = zeroGuess1;
+            zeroGuess1 = this.secantMethodNextGuess(zeroGuess1, zeroGuess2, currG1Val, currG2Val);
+            zeroGuess2 = lastGuess;
+            
+            
+            
+         } // end while
+         
+         this.eps_i[i] = zeroGuess1;
+         
+      }
+   }
+   
+   
+   private double getInducedEpsilonEqnOutput(int index, double epsIndValue, double cbhat, double zeta) {      
+      
+      double left = (cbhat/(8*zeta)) * this.Cl[index];      
+      double right1 = Math.acos(   Math.exp( (this.propeller.getNumberOfBlades() * (1 - zeta) ) / (2 * Math.sin(this.beta_tip[this.propeller.getNumDescPoints() - 1]))   )  );      
+      double right2 = Math.tan(epsIndValue) * Math.sin(this.eps_inf[index] + epsIndValue);      
+      double result = left - (right1 * right2);
+      
+      return result;
+   }
+   
+   // guess 1 = n-1, guess 2 = n-2
+   private double secantMethodNextGuess( double guess1, double guess2, double val1, double val2) {
+      
+      return guess1 - val1 * ( (guess1 - guess2) / ( val1 - val2 ) );
+      
+   }
+   
+   
+   //
+   // Cl / Cd calculations
+   //
+   
+   // eventually eps_i (induced eps) since alpha_b is a function of that as well. 
+   private void calculateVPMParameters() {
+      
+      for (int i = 0; i < this.propeller.getNumDescPoints(); i++) {
+         
+         // set alpha_B
+         this.propeller.getAirfoilAtRadialIndex(i).setangleOfAttackRad(this.beta_aero[i] - this.eps_inf[i]);
+         AirfoilGeometry thisAirfoil = this.propeller.getAirfoilAtRadialIndex(i);
+         this.vpm.setAirfoil(thisAirfoil );
+         this.vpm.setVinfinity(1); // this is speed coming in, set to 1 for coeff
+         this.vpm.runVPMSolver();
+         
+         this.Cl[i] = this.vpm.getCl() * this.propeller.getChordsAtIndex(i);
+         this.Cd[i] = this.vpm.getCd() * this.propeller.getChordsAtIndex(i);
+         
+      }
+      
    }
    
    //

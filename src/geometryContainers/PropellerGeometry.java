@@ -74,7 +74,7 @@ public class PropellerGeometry {
          } else {
             this.chords[i] = this.maxChordLen - ( ( this.maxChordLen - this.tipChordLen ) * ( (i - maxChordPoint) / (this.numDescPoints - maxChordPoint) ) );
          }  
-         this.radiusPoints[i] = i * incPerIter;
+         //this.radiusPoints[i] = i * incPerIter;
       }
       
    }
@@ -104,7 +104,7 @@ public class PropellerGeometry {
       
       for (int i = 0; i < this.numDescPoints; i++) {
          this.radiusPoints[i] = hubRadius + ((double) i) * incPerIter;
-         System.out.println(this.radiusPoints[i]);
+         //System.out.println(this.radiusPoints[i]);
       }
    }
    
@@ -212,6 +212,10 @@ public class PropellerGeometry {
    public double[] getChords() {
       return chords;
    }
+   
+   public double getChordsAtIndex(int index) {
+      return chords[index];
+   }
 
    public void setChords(double[] chords) {
       this.chords = chords;
@@ -253,6 +257,7 @@ public class PropellerGeometry {
    public AirfoilGeometry[] getAirfoils() {
       return airfoils;
    }
+   
    public AirfoilGeometry getAirfoilAtRadialIndex(int index) {
       return this.airfoils[index];
    }
