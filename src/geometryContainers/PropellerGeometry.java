@@ -6,20 +6,17 @@ public class PropellerGeometry {
    private double startAngleRMT; // start angle for root mean twist
    private double endAngleRMT;   // end angle for root mean twist
    private double dp;            //Propeller Diameter
+   private double hubDiameterPerc;
    private double omega;         // rotational speed of propeller
    private int numDescPoints;
    private final int DEFAULT_NUM_PTS = 10;
    private double[] rmtAngle;    // in rad
    
-   enum RMTTYPE{
-      LINEAR,
-      LOG;
-   }
-   
-   private RMTTYPE rmtType;
-   
-   
-   private double hubDiameterPerc;
+   public enum RMTTYPE{ LINEAR,LOG;}  
+   private RMTTYPE rmtType;   
+   private double chordLinePitch;
+   public enum GEOMETRICWASHOUT{ RMT,PITCH_TO_DIAMETER;}  
+   public GEOMETRICWASHOUT geometricWashoutDefinition;
    
    // blade properties
    private double hubChordLen;
@@ -96,7 +93,6 @@ public class PropellerGeometry {
       
    }
    
-   
    public void generateRadialPositions() {
       double hubRadius = ((this.dp/2.0) * this.hubDiameterPerc);
       double radMinusHub = ((this.dp/2.0) - hubRadius);
@@ -124,147 +120,136 @@ public class PropellerGeometry {
    public double getStartAngleRMT() {
       return startAngleRMT;
    }
-
    public void setStartAngleRMT(double startAngleRMT) {
       this.startAngleRMT = startAngleRMT;
    }
-
    public double getEndAngleRMT() {
       return endAngleRMT;
    }
-
    public void setEndAngleRMT(double endAngleRMT) {
       this.endAngleRMT = endAngleRMT;
    }
-
    public double getDp() {
       return dp;
    }
-
    public void setDp(double dp) {
       this.dp = dp;
    }
-
    public double getOmega() {
       return omega;
    }
-
    public void setOmega(double omega) {
       this.omega = omega;
    }
-
    public int getNumDescPoints() {
       return numDescPoints;
    }
-
    public void setNumDescPoints(int numDescPoints) {
       this.numDescPoints = numDescPoints;
    }
-
    public double[] getRmtAngle() {
       return rmtAngle;
    }
-
    public void setRmtAngle(double[] rmtAngle) {
       this.rmtAngle = rmtAngle;
    }
-
    public double getHubDiameterPerc() {
       return hubDiameterPerc;
    }
-
    public void setHubDiameterPerc(double hubDiameterPerc) {
       this.hubDiameterPerc = hubDiameterPerc;
    }
-
    public double getHubChordLen() {
       return hubChordLen;
    }
-
    public void setHubChordLen(double hubChordLen) {
       this.hubChordLen = hubChordLen;
    }
-
    public double getMaxChordLen() {
       return maxChordLen;
    }
-
    public void setMaxChordLen(double maxChordLen) {
       this.maxChordLen = maxChordLen;
    }
-
    public double getMaxChordPerc() {
       return maxChordPerc;
    }
-
    public void setMaxChordPerc(double maxChordPerc) {
       this.maxChordPerc = maxChordPerc;
    }
-
    public double getTipChordLen() {
       return tipChordLen;
    }
-
    public void setTipChordLen(double tipChordLen) {
       this.tipChordLen = tipChordLen;
    }
-
    public double[] getChords() {
       return chords;
    }
-   
+  
    public double getChordsAtIndex(int index) {
       return chords[index];
    }
-
    public void setChords(double[] chords) {
       this.chords = chords;
    }
-
    public int getDEFAULT_NUM_PTS() {
       return DEFAULT_NUM_PTS;
    }
-
    public int getNumberOfBlades() {
       return numberOfBlades;
    }
-
    public void setNumberOfBlades(int numberOfBlades) {
       this.numberOfBlades = numberOfBlades;
    }
-
    public double[] getRadiusPoints() {
       return radiusPoints;
    }
-   
+  
    public double getRadiusPointIndex(int index) {
       return radiusPoints[index];
    }
-
    public void setRadiusPoints(double[] radiusPoints) {
       this.radiusPoints = radiusPoints;
    }
-
    public RMTTYPE getRmtType() {
       return rmtType;
    }
-
    public void setRmtType(RMTTYPE rmtType) {
       this.rmtType = rmtType;
    }
-
-   
    public AirfoilGeometry[] getAirfoils() {
       return airfoils;
    }
-   
    public AirfoilGeometry getAirfoilAtRadialIndex(int index) {
       return this.airfoils[index];
    }
-
    public void setAirfoils(AirfoilGeometry[] airfoils) {
       this.airfoils = airfoils;
    }
+
+   public double getChordLinePitch() {
+      return chordLinePitch;
+   }
+
+   public void setChordLinePitch(double chordLinePitch) {
+      this.chordLinePitch = chordLinePitch;
+   }
+
+   public GEOMETRICWASHOUT getGeometricWashoutDefinition() {
+      return geometricWashoutDefinition;
+   }
+
+   public void setGeometricWashoutDefinition(
+         GEOMETRICWASHOUT geometricWashoutDefinition) {
+      this.geometricWashoutDefinition = geometricWashoutDefinition;
+   }
+
+   
+   public double getPitchToDiameterRatio() {
+      return ( (this.chordLinePitch) / (this.dp) );
+   }
+   
    
    
    

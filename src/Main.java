@@ -96,7 +96,7 @@ public class Main {
       
       GoldsteinVortexTheorySolver gvt = new GoldsteinVortexTheorySolver();
       gvt.setPropeller(pg);
-      gvt.calculateBeta_tip();
+      gvt.calculateBeta_tip_rmt();
       
       double[] theBeta = gvt.getBeta_tip();
       double[] theLoc =pg.getRadiusPoints();
@@ -110,22 +110,41 @@ public class Main {
       AirfoilGeometry af = new AirfoilGeometry();
       af.becomeNACA4Series(2, 4, 1, 2);
       
-      PropellerGeometry pg = new PropellerGeometry();
-      pg.setNumberOfBlades(2);
-      pg.setRadialParameters(2.0, 0.1);
-      pg.setRmtParametersDeg(10, 5);
-      pg.generateRadialPositions();
+      // https://www.amazon.com/DJI-Genuine-Release-Folding-Propellers/dp/B073JRWYKK
+      // using this propeller
+      
+      PropellerGeometry pg = new PropellerGeometry();      
+      pg.setGeometricWashoutDefinition(PropellerGeometry.GEOMETRICWASHOUT.PITCH_TO_DIAMETER);      
       pg.setRadialPtsToSameAirfoil(af);
-      pg.setOmega(700); // radians per second
-      pg.setChordParams(2.0, 4.0, 0.4, 3.0);
+      
+      // ------------- DJI Spark Propeller -------------------
+      // The below information taken from DJI Spark propeller
+      // https://www.amazon.com/DJI-Genuine-Release-Folding-Propellers/dp/B073JRWYKK
+      // Future analysis improvement: its more Thin Airfoil than 2412. consider camberline
+      // of finite thickness for analysis instead of thick airfoil. could improve geometry
+      // non linearities as well
+      // --------------------------------
+      pg.setOmega(700);                      // radians per second ~7k rpm      
+      pg.setNumberOfBlades(2);
+      pg.setChordLinePitch(.0762);
+      pg.setRadialParameters(0.11938, 0.1);  // in meters
+      pg.generateRadialPositions();
+      pg.setChordParams(0.00994, .011928 , (1.0/3.0) , .00994);
+      
       pg.generateChordLengths();
       
       GoldsteinVortexTheorySolver gvt = new GoldsteinVortexTheorySolver();
       gvt.setPropeller(pg);
-      gvt.setVinf(100); // m/s
-      gvt.calculateBeta_tip();
+      gvt.setVinf(0.5); // m/s
+      //gvt.calculateBeta_tip();
       
-      gvt.runGVT();
+      try {
+         gvt.runGVT();
+      } catch (Exception e) {
+         // TODO Auto-generated catch block
+         System.out.println("Exceeded max iterations");
+         e.printStackTrace();
+      }
       
    }
    
