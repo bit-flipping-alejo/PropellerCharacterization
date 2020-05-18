@@ -146,6 +146,12 @@ public class Main {
          e.printStackTrace();
       }
       
+      
+      System.out.println("=== GVT Results ===");
+      System.out.println("C_Thrust: " + gvt.getThrustCoefficient());
+      System.out.println("C_Torque: " + gvt.getTorqueCoefficient());
+      System.out.println("C_Power: " + gvt.getPowerCoefficient());
+      
    }
    
    /*VPM Tests*/

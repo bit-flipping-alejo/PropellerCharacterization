@@ -242,7 +242,7 @@ public class GoldsteinVortexTheorySolver {
       this.numIterations = 0;
 
       while ( magDelta > this.resolutionEpsilon ) {
-         System.out.println("=== OutCount:" + this.numIterations + " Begin ===");
+         //System.out.println("=== OutCount:" + this.numIterations + " Begin ===");
 
          // enforce DEEP copy
          double[] oldEpsI = new double[this.propeller.getNumDescPoints() - 1];
@@ -257,13 +257,13 @@ public class GoldsteinVortexTheorySolver {
             double zeroGuess1 = this.beta_aero[0] / 3;
             double zeroGuess2 = this.beta_aero[this.propeller.getNumDescPoints() - 1] / 3;
 
-            System.out.println("\t OutCount:" + this.numIterations + " Iter#" + i + "  ===");
+            //System.out.println("\t OutCount:" + this.numIterations + " Iter#" + i + "  ===");
             int innerCounter = 0;
             while (true) {               
                double currG1Val = getInducedEpsilonEqnOutput(i , zeroGuess1, cbhat[i], this.zeta[i] );
                double currG2Val = getInducedEpsilonEqnOutput(i , zeroGuess2, cbhat[i], this.zeta[i] );
                if(Math.abs(currG1Val) < this.resolutionEpsilon ) {
-                  System.out.println("\t \t Epsilon: " + zeroGuess1 + " Val[N-1]: " + currG1Val );
+                  //System.out.println("\t \t Epsilon: " + zeroGuess1 + " Val[N-1]: " + currG1Val );
                   break;
                }
                double lastGuess = zeroGuess1;
@@ -281,7 +281,7 @@ public class GoldsteinVortexTheorySolver {
          magDelta = this.calcMagDifference( (this.propeller.getNumDescPoints()-1) , oldEpsI, this.eps_i );   
          this.epsiConvergenceData[this.numIterations] = magDelta;
          this.numIterations++;
-         System.out.println("=== OutCount:" + this.numIterations + " Done. MagDelta: " + magDelta + " ===");
+         //System.out.println("=== OutCount:" + this.numIterations + " Done. MagDelta: " + magDelta + " ===");
 
          if (this.numIterations > this.maxIterations) {
             throw new Exception("Induced Epsilon loop exceeed Max Iterations");
@@ -305,9 +305,21 @@ public class GoldsteinVortexTheorySolver {
       }
 
       if ( (this.propeller.getNumDescPoints() - 1) % 2 == 1 ) {
+         
          // is odd do trapezoidal Rule Integration
-
-
+         double deltaXovr2 = (this.zeta[1] - this.zeta[0]) / 2.0;
+         double rollSumCT = 0.0;
+         double rollSumCl = 0.0;
+         
+         for(int i = 1; i < ((this.propeller.getNumDescPoints() - 1) - 1); i++) {
+            rollSumCT += 2 * dCTdZeta[i];
+            rollSumCl += 2 * dCldZeta[i];
+         }
+         
+         this.thrustCoefficient = deltaXovr2 * ( dCTdZeta[0] + rollSumCT + dCTdZeta[this.propeller.getNumDescPoints() - 1 - 1] );         
+         this.torqueCoefficient = deltaXovr2 * ( dCldZeta[0] + rollSumCl + dCldZeta[this.propeller.getNumDescPoints() - 1 - 1] );
+         this.powerCoefficient = 2 * Math.PI * this.torqueCoefficient;
+         
       } else {
          // is even do Simpsons Rule integration
          double deltaXovr3 = (this.zeta[1] - this.zeta[0]) / 3.0;
@@ -332,7 +344,10 @@ public class GoldsteinVortexTheorySolver {
          this.powerCoefficient = 2 * Math.PI * this.torqueCoefficient;
       }
 
-
+      System.out.println("-------------");
+      System.out.println("Done with GVT");
+      System.out.println("-------------");
+      
    }
 
 
@@ -482,16 +497,8 @@ public class GoldsteinVortexTheorySolver {
       return Cl;
    }
 
-   public void setCl(double[] cl) {
-      Cl = cl;
-   }
-
    public double[] getCd() {
       return Cd;
-   }
-
-   public void setCd(double[] cd) {
-      Cd = cd;
    }
 
    public double[] getZeroLiftAlphas() {
@@ -501,8 +508,6 @@ public class GoldsteinVortexTheorySolver {
    public void setZeroLiftAlphas(double[] zeroLiftAlphas) {
       this.zeroLiftAlphas = zeroLiftAlphas;
    }
-
-
 
 
    public double[] getZeta() {
@@ -536,6 +541,18 @@ public class GoldsteinVortexTheorySolver {
 
    public void setEpsiConvergenceData(double[] epsiConvergenceData) {
       this.epsiConvergenceData = epsiConvergenceData;
+   }
+
+   public double getThrustCoefficient() {
+      return thrustCoefficient;
+   }
+
+   public double getTorqueCoefficient() {
+      return torqueCoefficient;
+   }
+
+   public double getPowerCoefficient() {
+      return powerCoefficient;
    }
 
 
