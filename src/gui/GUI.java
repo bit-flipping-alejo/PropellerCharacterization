@@ -1,20 +1,23 @@
 package gui;
 
-import java.awt.Font;
+
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class GUI extends Application{
@@ -54,7 +57,8 @@ public class GUI extends Application{
       primaryStage.setTitle("Propeller + Airfoil Solver");
       
       this.createTabs(primaryStage);
-      this.populateAirfoilTab(primaryStage);
+      this.populateAirfoilTabInputs(primaryStage);
+      this.populatePropellerTabInputs(primaryStage);
       
       /*// When youre ready for external stylesheets use this
        * File f = new File("filecss.css");
@@ -70,8 +74,9 @@ public class GUI extends Application{
    private void createTabs(Stage primaryStage ) {
       this.mainTabPane = new TabPane();
       this.airfoilTab = new Tab("Airfoils");
+      this.airfoilTab.setClosable(false);
       this.propellerTab = new Tab("Propellers");
-      
+      this.propellerTab.setClosable(false);
       this.mainTabPane.getTabs().add(this.airfoilTab);
       this.mainTabPane.getTabs().add(this.propellerTab);
       
@@ -79,13 +84,14 @@ public class GUI extends Application{
       this.mainScene = new Scene(tabVertBox, this.DEFAULT_WIDTH, this.DEFAULT_HEIGHT);  
    }
    
-   private void populateAirfoilTab(Stage primaryStage) {
+   private void populateAirfoilTabInputs(Stage primaryStage) {
 
       this.airfoilPane = new BorderPane();
       this.airfoilPane.setPadding(new Insets(10, 20, 10, 20));
       
       
-      Label title = new Label("Vortex Panel Solver");
+      Label title = new Label("Airfoil Solver [Vortex Panel Methods]");
+      title.setFont(new Font(24.0));
       TilePane topTile = new TilePane();
       topTile.getChildren().add(title);
       topTile.setAlignment(Pos.TOP_CENTER);
@@ -94,18 +100,67 @@ public class GUI extends Application{
       GridPane centerGrid = new GridPane();
       centerGrid.setHgap(10);
       centerGrid.setVgap(10);
-      /*Add Center grid buttons etc here*/
+      
+      //
+      // Center Grid Additions
+      //    
+      Label lblAirfoil = new Label("Airfoil Type: ");
+      centerGrid.add(lblAirfoil, 0, 0);
+      
+      ComboBox<String> cbAirfoilType = new ComboBox<String>();
+      cbAirfoilType.getItems().add("Select One");
+      cbAirfoilType.getItems().add("NACA 4 Series");
+      cbAirfoilType.getItems().add("TBD: NACA 5 Series");
+      cbAirfoilType.getItems().add("TBD: Points input");      
+      centerGrid.add(cbAirfoilType, 2, 0);
+      
+      Label lblAOA = new Label("Angle of Attack (deg): ");
+      centerGrid.add(lblAOA, 0, 2);
+      
+      TextField tfAOA = new TextField();
+      centerGrid.add(tfAOA, 2, 2);
+    
+      Button btnCalculateVPM = new Button("Calculate");
+      btnCalculateVPM.setOnAction(actionEvent -> {
+         System.out.println("Start VPM calculation here!");
+      });
+      centerGrid.add(btnCalculateVPM, 0, 4);
+      
       
       
       this.airfoilPane.setCenter(centerGrid);
-      
-      
-      
       this.airfoilTab.setContent(this.airfoilPane);
       
    }
    
-   
+   private void populatePropellerTabInputs(Stage primaryStage) {
+      this.propellerPane = new BorderPane();
+      this.propellerPane.setPadding(new Insets(10, 20, 10, 20));
+      
+      
+      Label title = new Label("Propeller Solver [Goldsteins Vortex Theory]");
+      title.setFont(new Font(24.0));
+      TilePane topTile = new TilePane();
+      topTile.getChildren().add(title);
+      topTile.setAlignment(Pos.TOP_CENTER);
+      this.propellerPane.setTop(title);
+      
+      GridPane centerGrid = new GridPane();
+      centerGrid.setHgap(10);
+      centerGrid.setVgap(10);
+      
+      //propeller radius
+      
+      //propeller % hub
+      
+      //propeller, definitions combobox. default is 3 pt linear
+      
+      //propeller hub chord, max cord, max chord perc, end chord len
+      
+      
+      this.propellerPane.setCenter(centerGrid);
+      this.propellerTab.setContent(this.propellerPane);
+   }
    
    
 }
