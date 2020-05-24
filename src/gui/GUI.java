@@ -150,12 +150,47 @@ public class GUI extends Application{
       centerGrid.setVgap(10);
       
       //propeller radius
+      Label lblRadValue = new Label("Propeller Radius (m): ");
+      TextField tfRadValue = new TextField();
+      centerGrid.add(lblRadValue, 0, 0);
+      centerGrid.add(tfRadValue, 2, 0);
       
       //propeller % hub
+      Label lblPercHub = new Label("Percent Hub: ");
+      TextField tfPercHub = new TextField();
+      centerGrid.add(lblPercHub, 0, 2);
+      centerGrid.add(tfPercHub, 2, 2);
       
       //propeller, definitions combobox. default is 3 pt linear
+      Label lblChordDef = new Label("Propeller chord definition");      
+      ComboBox<String> cbChordDef = new ComboBox<String>();
+      cbChordDef.getItems().add("Select One");
+      cbChordDef.getItems().add("3 Pt");
+      cbChordDef.getItems().add("TBD: 5 pt");
+      cbChordDef.getItems().add("TBD: Equation");      
+      centerGrid.add(lblChordDef, 0, 4);
+      centerGrid.add(cbChordDef, 2, 4);      
       
       //propeller hub chord, max cord, max chord perc, end chord len
+      Label lblHubChordLen = new Label("Hub Chord Len: ");
+      TextField tfHubChordLen = new TextField();
+      centerGrid.add(lblHubChordLen, 0, 6);
+      centerGrid.add(tfHubChordLen, 2, 6);     
+      
+      Label lblMaxChordLen = new Label("Max Chord Len: ");
+      TextField tfMaxChordLen = new TextField();
+      centerGrid.add(lblMaxChordLen, 0, 8);
+      centerGrid.add(tfMaxChordLen, 2, 8);
+      
+      Label lblMaxChordLocPerc = new Label("Max Chord Loc Perc: ");
+      TextField tfMaxChordLocPerc = new TextField();
+      centerGrid.add(lblMaxChordLocPerc, 0, 10);
+      centerGrid.add(tfMaxChordLocPerc, 2, 10);
+      
+      Label lblTipChordLen = new Label("Tip Chord Len: ");
+      TextField tfTipChordLen = new TextField();
+      centerGrid.add(lblTipChordLen, 0, 12);
+      centerGrid.add(tfTipChordLen, 2, 12);
       
       
       this.propellerPane.setCenter(centerGrid);
