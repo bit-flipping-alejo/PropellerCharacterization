@@ -192,6 +192,11 @@ public class GUI extends Application{
       centerGrid.add(lblTipChordLen, 0, 12);
       centerGrid.add(tfTipChordLen, 2, 12);
       
+      Button btnCalculateGVT = new Button("Calculate");
+      btnCalculateGVT.setOnAction(actionEvent -> {
+         System.out.println("Start GVT calculation here!");
+      });
+      centerGrid.add(btnCalculateGVT, 0, 14);
       
       this.propellerPane.setCenter(centerGrid);
       this.propellerTab.setContent(this.propellerPane);
