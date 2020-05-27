@@ -202,8 +202,8 @@ public class GUI extends Application{
       ComboBox<String> cbChordDef = new ComboBox<String>();
       cbChordDef.getItems().add("Select One");
       cbChordDef.getItems().add("3 Pt");
-      cbChordDef.getItems().add("TBD: 5 pt");
-      cbChordDef.getItems().add("TBD: Equation");      
+      //cbChordDef.getItems().add("TBD: 5 pt");
+      //cbChordDef.getItems().add("TBD: Equation");      
       centerGrid.add(lblChordDef, 0, 4);
       centerGrid.add(cbChordDef, 2, 4);      
 
@@ -273,7 +273,19 @@ public class GUI extends Application{
             //validate data here
             System.out.println("you wrote: " + toCheck.getText());
             
-            return true;
+            int len = toCheck.getText().length();
+            if (len != 4) {
+               return false;
+            }
+            
+            int naca4val = (int) Double.parseDouble( toCheck.getText() );
+            
+            if ( (naca4val > 0) && (naca4val < 9999) ) {
+               return true;
+            } else {
+               return false;
+            }
+            
          default:
             return false;
          }
