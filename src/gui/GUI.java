@@ -24,6 +24,9 @@ import javafx.stage.Stage;
 
 import solvers.GoldsteinVortexTheorySolver;
 import solvers.VortexPanelSolver;
+
+import java.util.regex.Pattern;
+
 import geometryContainers.AirfoilGeometry;
 import geometryContainers.PropellerGeometry;
 
@@ -148,12 +151,6 @@ public class GUI extends Application{
       });
       centerGrid.add(cbAirfoilType, 2, 0);
 
-      Label lblAOA = new Label("Angle of Attack (deg): ");
-      centerGrid.add(lblAOA, 0, 2);
-
-      TextField tfAOA = new TextField();
-      centerGrid.add(tfAOA, 2, 2);
-
       Button btnCalculateVPM = new Button("Calculate");
       btnCalculateVPM.setOnAction(actionEvent -> {
          this.runVPM();
@@ -248,10 +245,29 @@ public class GUI extends Application{
 
    private void runVPM() {
       if (!this.validateData()) {
+         System.out.println("data NOT validated");
          return;
       }
+      
+      
       System.out.println("running VPM from func call");
-
+      
+      AirfoilGeometry ag = new AirfoilGeometry(1);
+      
+      //bc of validation function, this is guarenteed to be present
+      TextField nacaNum = (TextField) this.getByUserData( this.naca4SeriesPane , "tf4SeriesInput");
+      ag.becomeNACA4Series(nacaNum.getText().charAt(0), 
+            nacaNum.getText().charAt(1), 
+            nacaNum.getText().charAt(2), 
+            nacaNum.getText().charAt(3));
+      
+      TextField AoA = (TextField) this.getByUserData( this.naca4SeriesPane , "tfAOA");
+      double aoaDeg = Double.parseDouble(AoA.getText());
+      
+      ag.setangleOfAttackRad(aoaDeg * (Math.PI/180));
+      
+      
+      
    }
 
 
@@ -270,22 +286,43 @@ public class GUI extends Application{
             }
             TextField toCheck = (TextField) tochk;
             
-            //validate data here
-            System.out.println("you wrote: " + toCheck.getText());
-            
+            //validate data here 
+            //NACA Number
             int len = toCheck.getText().length();
             if (len != 4) {
                return false;
             }
             
-            int naca4val = (int) Double.parseDouble( toCheck.getText() );
-            
-            if ( (naca4val > 0) && (naca4val < 9999) ) {
-               return true;
-            } else {
+            String pattern = "\\d*[a-zA-Z]+";            
+            Boolean isBad = Pattern.matches(pattern, toCheck.getText());
+            if (isBad) {
+               System.out.println("Is regex bad");
                return false;
             }
             
+            int naca4val = (int) Double.parseDouble( toCheck.getText() );
+            if (! ( (naca4val > 0) && (naca4val < 9999) )) {               
+               System.out.println("is out of numerical bounds");
+               return false;
+            }
+            
+            // AoA
+            Object tochkAoA = this.getByUserData( this.naca4SeriesPane , "tfAOA");
+            if (tochkAoA == null) {
+               return false;
+            }
+            
+            TextField toCheckAoA = (TextField) tochkAoA;            
+            Boolean isBadAoA = Pattern.matches(pattern, toCheckAoA.getText());
+            if (isBadAoA) {
+               return false;
+            }
+            double aoaVal = (double) Double.parseDouble( toCheckAoA.getText() );
+            if (Math.abs(aoaVal) > 12) {
+               return false;
+            }
+            
+            return true;
          default:
             return false;
          }
@@ -318,6 +355,13 @@ public class GUI extends Application{
       tf4SeriesInput.setUserData("tf4SeriesInput");
       this.naca4SeriesPane.add(tf4SeriesInput, 0, 1);
 
+      Label lblAOA = new Label("Angle of Attack (deg): ");
+      this.naca4SeriesPane.add(lblAOA, 0, 2);
+
+      TextField tfAOA = new TextField();
+      tfAOA.setUserData("tfAOA");
+      this.naca4SeriesPane.add(tfAOA, 0, 3);
+      
       //centerGrid.add(pointsInputPane, 0, 8);      
       //centerGrid.add(naca5SeriesPane, 0, 8);
 
