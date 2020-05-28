@@ -8,6 +8,9 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -249,23 +252,66 @@ public class GUI extends Application{
          return;
       }
       
-      
-      System.out.println("running VPM from func call");
-      
       AirfoilGeometry ag = new AirfoilGeometry(1);
       
-      //bc of validation function, this is guarenteed to be present
       TextField nacaNum = (TextField) this.getByUserData( this.naca4SeriesPane , "tf4SeriesInput");
-      ag.becomeNACA4Series(nacaNum.getText().charAt(0), 
-            nacaNum.getText().charAt(1), 
-            nacaNum.getText().charAt(2), 
-            nacaNum.getText().charAt(3));
+      ag.becomeNACA4Series(Integer.parseInt(Character.toString(nacaNum.getText().charAt(0))), 
+            Integer.parseInt(Character.toString(nacaNum.getText().charAt(1))), 
+            Integer.parseInt(Character.toString(nacaNum.getText().charAt(2))), 
+            Integer.parseInt(Character.toString(nacaNum.getText().charAt(3))));
       
-      TextField AoA = (TextField) this.getByUserData( this.naca4SeriesPane , "tfAOA");
-      double aoaDeg = Double.parseDouble(AoA.getText());
+      TextField AoA = (TextField) this.getByUserData( this.naca4SeriesPane , "tfAOA");      
+      ag.setangleOfAttackRad(Double.parseDouble(AoA.getText()) * (Math.PI/180));
       
-      ag.setangleOfAttackRad(aoaDeg * (Math.PI/180));
+      VortexPanelSolver vpm = new VortexPanelSolver(ag);
+      vpm.setVinfinity(1);      
+      vpm.runVPMSolver();
       
+      // plot AF points
+      NumberAxis xAxisAF = new NumberAxis();
+      xAxisAF.setLabel("Normalized Chord");
+      
+      NumberAxis yAxisAF = new NumberAxis();
+      yAxisAF.setLabel("GeometryPosition");
+      
+      LineChart afChart = new LineChart(xAxisAF, yAxisAF);
+      XYChart.Series afSeries = new XYChart.Series();
+      
+      double afPts[][] = ag.getPoints();
+      for (int i = 0; i < ag.getNumberOfCtrlPoints(); i++) {         
+         afSeries.getData().add(new XYChart.Data( afPts[i][0] , afPts[i][1] ) );
+      }
+      
+      afChart.getData().add(afSeries);
+      afChart.setLegendVisible(false);
+      this.naca4SeriesPane.add(afChart, 0, 5);
+      
+      
+      // plot Pressure points
+      NumberAxis xAxisP = new NumberAxis();
+      xAxisAF.setLabel("Normalized Chord");
+      
+      NumberAxis yAxisP = new NumberAxis();
+      yAxisAF.setLabel("Pressure");
+      
+      LineChart pChart = new LineChart(xAxisAF, yAxisAF);
+      XYChart.Series pHiSeries = new XYChart.Series();
+      XYChart.Series pLoSeries = new XYChart.Series();
+      
+      double[] cps = vpm.getCoeffOfPressure();
+      for (int i = 0; i < Math.ceil(ag.getNumberOfCtrlPoints()/2); i++) {   
+         double [] hightPt = ag.getCtrlCoords(i);
+         double [] lowPt = ag.getCtrlCoords( ag.getNumberOfCtrlPoints() - 1 - i );
+
+         pHiSeries.getData().add(new XYChart.Data( hightPt[0] , cps[i] ) );
+         pLoSeries.getData().add(new XYChart.Data( lowPt[0]   , cps[ag.getNumberOfCtrlPoints() - 1 - i ] ) ); 
+      }
+      
+      pChart.getData().add(pHiSeries);
+      pChart.getData().add(pLoSeries);
+      
+      afChart.setLegendVisible(true);
+      this.naca4SeriesPane.add(pChart, 0, 8);
       
       
    }
@@ -300,7 +346,7 @@ public class GUI extends Application{
                return false;
             }
             
-            int naca4val = (int) Double.parseDouble( toCheck.getText() );
+            int naca4val = Integer.parseInt( toCheck.getText() );
             if (! ( (naca4val > 0) && (naca4val < 9999) )) {               
                System.out.println("is out of numerical bounds");
                return false;
