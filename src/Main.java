@@ -16,7 +16,7 @@ import gui.GUI;
 import solvers.GoldsteinVortexTheorySolver;
 import solvers.MatrixSolver;
 import solvers.VortexPanelSolver;
-
+import tests.GVTTests;
 import javafx.application.Application;
 
 public class Main {
@@ -38,7 +38,11 @@ public class Main {
 
    }
  
- 
+   /*
+   public static void gvtTests() {
+      GVTTests.testRunGVT();
+   }
+   */
 
 }
 

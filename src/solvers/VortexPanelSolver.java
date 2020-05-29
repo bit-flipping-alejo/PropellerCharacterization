@@ -6,11 +6,7 @@ import geometryContainers.AirfoilGeometry;
 
 
 
-/* http://www.joshtheengineer.com/2020/04/27/vortex-panel-method-airfoil/
- * https://www.youtube.com/watch?v=JL2fz-xTTT0
- *  look at phi[i] in geometric properties of airfoil
- *  
- * */
+
 public class VortexPanelSolver {
 
 
@@ -78,6 +74,7 @@ public class VortexPanelSolver {
       return false;
 
    }
+   
    public void flipPanelOrientation() {
 
       double [][] afPts = this.airfoil.getPoints();
@@ -186,6 +183,7 @@ public class VortexPanelSolver {
       }
 
    }
+   
    private void solveForVtCpCnCaClCdCm() {
 
       this.Cn = new double[this.airfoil.getNumberOfCtrlPoints()];
@@ -334,10 +332,6 @@ public class VortexPanelSolver {
    }
 
    
-   
-   
-   
-
    /*Getters and Setters*/
    public AirfoilGeometry getAirfoil() {
       return airfoil;
@@ -428,10 +422,6 @@ public class VortexPanelSolver {
    public void setCd(double cd) {
       Cd = cd;
    }
-
-
-   
-
 
 
 }

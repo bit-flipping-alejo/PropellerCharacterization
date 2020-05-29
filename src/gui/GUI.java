@@ -5,6 +5,7 @@ package gui;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -19,7 +20,9 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -77,6 +80,8 @@ public class GUI extends Application{
       primaryStage.show();
    }
 
+   
+   // --- Creation functions
    private void setStageParameters(Stage primaryStage) {
       primaryStage.setTitle("Propeller + Airfoil Solver");
 
@@ -104,7 +109,8 @@ public class GUI extends Application{
       this.mainTabPane.getTabs().add(this.propellerTab);
 
       VBox tabVertBox = new VBox(this.mainTabPane);      
-      this.mainScene = new Scene(tabVertBox, this.DEFAULT_WIDTH, this.DEFAULT_HEIGHT);  
+      this.mainScene = new Scene(tabVertBox, this.DEFAULT_WIDTH, this.DEFAULT_HEIGHT);
+      //this.mainScene = new Scene(tabVertBox);
    }
 
    private void populateAirfoilTabInputs(Stage primaryStage) {
@@ -113,10 +119,11 @@ public class GUI extends Application{
       this.airfoilPane.setPadding(new Insets(10, 20, 10, 20));
 
       Label title = new Label("Airfoil Solver [Vortex Panel Methods]");
-      title.setFont(new Font(24.0));
-      TilePane topTile = new TilePane();
+      title.setFont(new Font(24.0));      
+      /*TilePane topTile = new TilePane();      
       topTile.getChildren().add(title);
       topTile.setAlignment(Pos.TOP_CENTER);
+      */
       this.airfoilPane.setTop(title);
 
       GridPane centerGrid = new GridPane();
@@ -126,8 +133,9 @@ public class GUI extends Application{
       //
       // Center Grid Additions
       //    
+      
       Label lblAirfoil = new Label("Airfoil Type: ");
-      centerGrid.add(lblAirfoil, 0, 0);
+      //centerGrid.add(lblAirfoil, 0, 0);
 
       ComboBox<String> cbAirfoilType = new ComboBox<String>();
       cbAirfoilType.getItems().add("Select One");
@@ -152,15 +160,16 @@ public class GUI extends Application{
          }
 
       });
-      centerGrid.add(cbAirfoilType, 2, 0);
+      //centerGrid.add(cbAirfoilType, 2, 0);
 
       Button btnCalculateVPM = new Button("Calculate");
       btnCalculateVPM.setOnAction(actionEvent -> {
          this.runVPM();
       });
-      centerGrid.add(btnCalculateVPM, 0, 4);
+      //centerGrid.add(btnCalculateVPM, 0, 2);
 
-
+      VBox nav = new VBox(lblAirfoil, cbAirfoilType, btnCalculateVPM);
+      this.airfoilPane.setLeft(nav);
       this.createAfPanelOptions(centerGrid);
 
 
@@ -238,85 +247,6 @@ public class GUI extends Application{
       this.propellerTab.setContent(this.propellerPane);
    }
 
-
-
-   private void runGVT() {
-     
-      System.out.println("running GVT from func call");
-
-   }
-
-   private void runVPM() {
-      if (!this.validateData()) {
-         System.out.println("data NOT validated");
-         return;
-      }
-      
-      AirfoilGeometry ag = new AirfoilGeometry(1);
-      
-      TextField nacaNum = (TextField) this.getByUserData( this.naca4SeriesPane , "tf4SeriesInput");
-      ag.becomeNACA4Series(Integer.parseInt(Character.toString(nacaNum.getText().charAt(0))), 
-            Integer.parseInt(Character.toString(nacaNum.getText().charAt(1))), 
-            Integer.parseInt(Character.toString(nacaNum.getText().charAt(2))), 
-            Integer.parseInt(Character.toString(nacaNum.getText().charAt(3))));
-      
-      TextField AoA = (TextField) this.getByUserData( this.naca4SeriesPane , "tfAOA");      
-      ag.setangleOfAttackRad(Double.parseDouble(AoA.getText()) * (Math.PI/180));
-      
-      VortexPanelSolver vpm = new VortexPanelSolver(ag);
-      vpm.setVinfinity(1);      
-      vpm.runVPMSolver();
-      
-      // plot AF points
-      NumberAxis xAxisAF = new NumberAxis();
-      xAxisAF.setLabel("Normalized Chord");
-      
-      NumberAxis yAxisAF = new NumberAxis();
-      yAxisAF.setLabel("GeometryPosition");
-      
-      LineChart afChart = new LineChart(xAxisAF, yAxisAF);
-      XYChart.Series afSeries = new XYChart.Series();
-      
-      double afPts[][] = ag.getPoints();
-      for (int i = 0; i < ag.getNumberOfCtrlPoints(); i++) {         
-         afSeries.getData().add(new XYChart.Data( afPts[i][0] , afPts[i][1] ) );
-      }
-      
-      afChart.getData().add(afSeries);
-      afChart.setLegendVisible(false);
-      this.naca4SeriesPane.add(afChart, 0, 5);
-      
-      
-      // plot Pressure points
-      NumberAxis xAxisP = new NumberAxis();
-      xAxisAF.setLabel("Normalized Chord");
-      
-      NumberAxis yAxisP = new NumberAxis();
-      yAxisAF.setLabel("Pressure");
-      
-      LineChart pChart = new LineChart(xAxisAF, yAxisAF);
-      XYChart.Series pHiSeries = new XYChart.Series();
-      XYChart.Series pLoSeries = new XYChart.Series();
-      
-      double[] cps = vpm.getCoeffOfPressure();
-      for (int i = 0; i < Math.ceil(ag.getNumberOfCtrlPoints()/2); i++) {   
-         double [] hightPt = ag.getCtrlCoords(i);
-         double [] lowPt = ag.getCtrlCoords( ag.getNumberOfCtrlPoints() - 1 - i );
-
-         pHiSeries.getData().add(new XYChart.Data( hightPt[0] , cps[i] ) );
-         pLoSeries.getData().add(new XYChart.Data( lowPt[0]   , cps[ag.getNumberOfCtrlPoints() - 1 - i ] ) ); 
-      }
-      
-      pChart.getData().add(pHiSeries);
-      pChart.getData().add(pLoSeries);
-      
-      afChart.setLegendVisible(true);
-      this.naca4SeriesPane.add(pChart, 0, 8);
-      
-      
-   }
-
-
    // --- Data Validation
    private boolean validateData() {
       
@@ -382,7 +312,6 @@ public class GUI extends Application{
       return false;
       
    }
-   
 
    // --- Panel Creation + Switching
    private void createAfPanelOptions(GridPane centerGrid) {
@@ -394,19 +323,19 @@ public class GUI extends Application{
       Label defaultLabel = new Label("Please use Drop Down to left");
       this.defaultAfPane.add(defaultLabel, 0, 0);
 
-      Label af4SeriesInput = new Label("Please input NACA 4 Series Value");
-      this.naca4SeriesPane.add(af4SeriesInput, 0, 0);
+      Label af4SeriesInput = new Label("NACA 4 Series Value");
+      this.naca4SeriesPane.add(af4SeriesInput, 0, 0, 1, 1);
 
       TextField tf4SeriesInput = new TextField();
       tf4SeriesInput.setUserData("tf4SeriesInput");
-      this.naca4SeriesPane.add(tf4SeriesInput, 0, 1);
+      this.naca4SeriesPane.add(tf4SeriesInput, 1, 0, 1, 1);
 
       Label lblAOA = new Label("Angle of Attack (deg): ");
-      this.naca4SeriesPane.add(lblAOA, 0, 2);
+      this.naca4SeriesPane.add(lblAOA, 0, 1, 1, 1);
 
       TextField tfAOA = new TextField();
       tfAOA.setUserData("tfAOA");
-      this.naca4SeriesPane.add(tfAOA, 0, 3);
+      this.naca4SeriesPane.add(tfAOA, 1, 1, 1, 1);
       
       //centerGrid.add(pointsInputPane, 0, 8);      
       //centerGrid.add(naca5SeriesPane, 0, 8);
@@ -438,6 +367,132 @@ public class GUI extends Application{
       
       return null;
    }
+
+   
+   
+   
+   
+   // --- Running Functions
+   private void runGVT() {
+     
+      System.out.println("running GVT from func call");
+
+   }
+
+   @SuppressWarnings("unchecked")
+   private void runVPM() {
+      if (!this.validateData()) {
+         System.out.println("data NOT validated");
+         return;
+      }
+      
+      AirfoilGeometry ag = new AirfoilGeometry(1);
+      
+      TextField nacaNum = (TextField) this.getByUserData( this.naca4SeriesPane , "tf4SeriesInput");
+      ag.becomeNACA4Series(Integer.parseInt(Character.toString(nacaNum.getText().charAt(0))), 
+            Integer.parseInt(Character.toString(nacaNum.getText().charAt(1))), 
+            Integer.parseInt(Character.toString(nacaNum.getText().charAt(2))), 
+            Integer.parseInt(Character.toString(nacaNum.getText().charAt(3))));
+      
+      TextField AoA = (TextField) this.getByUserData( this.naca4SeriesPane , "tfAOA");      
+      ag.setangleOfAttackRad(Double.parseDouble(AoA.getText()) * (Math.PI/180));
+      
+      VortexPanelSolver vpm = new VortexPanelSolver(ag);
+      vpm.setVinfinity(1);      
+      vpm.runVPMSolver();
+      
+      // Add Labels
+      Object testLblCL = this.getByUserData(this.naca4SeriesPane, "lblCL");
+      if (!(testLblCL == null)) {
+         //delete everything
+         this.naca4SeriesPane.getChildren().remove((Label) testLblCL);
+      }      
+      Label lblCL = new Label("Coeff of Lift: " + vpm.getCl());
+      lblCL.setUserData("lblCL");
+      
+      Object testLblCD = this.getByUserData(this.naca4SeriesPane, "lblCD");
+      if (!(testLblCD == null)) {
+         //delete everything
+         this.naca4SeriesPane.getChildren().remove((Label) testLblCD);
+      }
+      Label lblCD = new Label("Coeff of Drag: " + vpm.getCd());
+      lblCD.setUserData("lblCD");
+      Object testLblCM = this.getByUserData(this.naca4SeriesPane, "lblCM");
+      if (!(testLblCM == null)) {
+         //delete everything
+         this.naca4SeriesPane.getChildren().remove((Label) testLblCM);
+      }
+      Label lblCM = new Label("Coeff of Moment (quarter chord): " + vpm.getCm());
+      lblCM.setUserData("lblCM");
+      
+      this.naca4SeriesPane.add(lblCL, 0, 3, Integer.MAX_VALUE, 1 );
+      this.naca4SeriesPane.add(lblCD, 0, 4, Integer.MAX_VALUE, 1 );
+      this.naca4SeriesPane.add(lblCM, 0, 5, Integer.MAX_VALUE, 1 );
+      
+      
+      // plot AF points
+      NumberAxis xAxisAF = new NumberAxis();
+      xAxisAF.setLabel("Normalized Chord");
+      
+      NumberAxis yAxisAF = new NumberAxis();
+      yAxisAF.setLabel("GeometryPosition");
+      
+      
+      Object testChartaf = this.getByUserData(this.naca4SeriesPane, "afChart");
+      if (!(testChartaf == null)) {
+         //delete everything
+         this.naca4SeriesPane.getChildren().remove((LineChart<Number, Number>) testChartaf);
+      }
+      LineChart<Number, Number> afChart = new LineChart<Number, Number>(xAxisAF, yAxisAF);
+      afChart.setUserData("afChart");
+      XYChart.Series<Number, Number> afSeries = new XYChart.Series<Number, Number>();
+      
+      double afPts[][] = ag.getPoints();
+      for (int i = 0; i < ag.getNumberOfCtrlPoints(); i++) {         
+         afSeries.getData().add(new XYChart.Data<Number, Number>( afPts[i][0] , afPts[i][1] ) );
+      }
+      afSeries.setName("Airfoil Points");
+      afChart.getData().add(afSeries);
+      afChart.setLegendVisible(false);
+      this.naca4SeriesPane.add(afChart, 0, 6, 1, Integer.MAX_VALUE);
+      
+      // plot Pressure points
+      NumberAxis xAxisP = new NumberAxis();
+      xAxisAF.setLabel("Normalized Chord");
+      
+      NumberAxis yAxisP = new NumberAxis();
+      yAxisAF.setLabel("Pressure");
+      
+      Object testChartP = this.getByUserData(this.naca4SeriesPane, "pChart");
+      if (!(testChartP == null)) {
+         //delete everything
+         this.naca4SeriesPane.getChildren().remove((LineChart<Number, Number>) testChartP);
+      }
+      LineChart<Number, Number> pChart = new LineChart<Number, Number>(xAxisP, yAxisP);
+      pChart.setUserData("pChart");
+      XYChart.Series<Number, Number> pHiSeries = new XYChart.Series<Number, Number>();
+      XYChart.Series<Number, Number> pLoSeries = new XYChart.Series<Number, Number>();
+      
+      double[] cps = vpm.getCoeffOfPressure();
+      for (int i = 0; i < Math.ceil(ag.getNumberOfCtrlPoints()/2); i++) {   
+         double [] hightPt = ag.getCtrlCoords(i);
+         double [] lowPt = ag.getCtrlCoords( ag.getNumberOfCtrlPoints() - 1 - i );
+
+         pHiSeries.getData().add(new XYChart.Data<Number, Number>( hightPt[0] , cps[i] ) );
+         pLoSeries.getData().add(new XYChart.Data<Number, Number>( lowPt[0]   , cps[ag.getNumberOfCtrlPoints() - 1 - i ] ) ); 
+      }
+      pHiSeries.setName("High Pressure");
+      pLoSeries.setName("Low Pressure");
+      pChart.getData().add(pHiSeries);
+      pChart.getData().add(pLoSeries);   
+      pChart.setLegendSide(Side.BOTTOM);      
+      afChart.setLegendVisible(true);
+      this.naca4SeriesPane.add(pChart, 1, 6, 1, Integer.MAX_VALUE);
+      
+      
+   }
+
+
 }
 
 
