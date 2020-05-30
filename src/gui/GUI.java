@@ -55,6 +55,15 @@ public class GUI extends Application{
    GridPane defaultAfPane;
    GridPane naca4SeriesPane;
 
+   
+   // GVT Tab Panes   
+   GridPane defaultPropPane;
+   GridPane threePtBladePane;
+   
+   GridPane defaultSetAirfoilPane;
+   GridPane allSameAirfoilPane;
+   GridPane perRadPtAirfoilPane;
+   
    Button vpmCalculate ;
 
    private enum afInputType {
@@ -120,10 +129,7 @@ public class GUI extends Application{
 
       Label title = new Label("Airfoil Solver [Vortex Panel Methods]");
       title.setFont(new Font(24.0));      
-      /*TilePane topTile = new TilePane();      
-      topTile.getChildren().add(title);
-      topTile.setAlignment(Pos.TOP_CENTER);
-      */
+
       this.airfoilPane.setTop(title);
 
       GridPane centerGrid = new GridPane();
@@ -181,8 +187,7 @@ public class GUI extends Application{
    private void populatePropellerTabInputs(Stage primaryStage) {
       this.propellerPane = new BorderPane();
       this.propellerPane.setPadding(new Insets(10, 20, 10, 20));
-
-
+      
       Label title = new Label("Propeller Solver [Goldsteins Vortex Theory]");
       title.setFont(new Font(24.0));
       TilePane topTile = new TilePane();
@@ -190,60 +195,91 @@ public class GUI extends Application{
       topTile.setAlignment(Pos.TOP_CENTER);
       this.propellerPane.setTop(title);
 
-      GridPane centerGrid = new GridPane();
-      centerGrid.setHgap(10);
-      centerGrid.setVgap(10);
+      GridPane leftGrid = new GridPane();
+      leftGrid.setHgap(10);
+      leftGrid.setVgap(10);
 
       //propeller radius
       Label lblRadValue = new Label("Propeller Radius (m): ");
       TextField tfRadValue = new TextField();
-      centerGrid.add(lblRadValue, 0, 0);
-      centerGrid.add(tfRadValue, 2, 0);
+      leftGrid.add(lblRadValue, 0, 0);
+      leftGrid.add(tfRadValue, 1, 0);
 
       //propeller % hub
       Label lblPercHub = new Label("Percent Hub: ");
       TextField tfPercHub = new TextField();
-      centerGrid.add(lblPercHub, 0, 2);
-      centerGrid.add(tfPercHub, 2, 2);
+      leftGrid.add(lblPercHub, 0, 1);
+      leftGrid.add(tfPercHub, 1, 1);
 
       //propeller, definitions combobox. default is 3 pt linear
       Label lblChordDef = new Label("Propeller chord definition");      
       ComboBox<String> cbChordDef = new ComboBox<String>();
       cbChordDef.getItems().add("Select One");
       cbChordDef.getItems().add("3 Pt");
-      //cbChordDef.getItems().add("TBD: 5 pt");
-      //cbChordDef.getItems().add("TBD: Equation");      
-      centerGrid.add(lblChordDef, 0, 4);
-      centerGrid.add(cbChordDef, 2, 4);      
-
-      //propeller hub chord, max cord, max chord perc, end chord len
-      Label lblHubChordLen = new Label("Hub Chord Len: ");
-      TextField tfHubChordLen = new TextField();
-      centerGrid.add(lblHubChordLen, 0, 6);
-      centerGrid.add(tfHubChordLen, 2, 6);     
-
-      Label lblMaxChordLen = new Label("Max Chord Len: ");
-      TextField tfMaxChordLen = new TextField();
-      centerGrid.add(lblMaxChordLen, 0, 8);
-      centerGrid.add(tfMaxChordLen, 2, 8);
-
-      Label lblMaxChordLocPerc = new Label("Max Chord Loc Perc: ");
-      TextField tfMaxChordLocPerc = new TextField();
-      centerGrid.add(lblMaxChordLocPerc, 0, 10);
-      centerGrid.add(tfMaxChordLocPerc, 2, 10);
-
-      Label lblTipChordLen = new Label("Tip Chord Len: ");
-      TextField tfTipChordLen = new TextField();
-      centerGrid.add(lblTipChordLen, 0, 12);
-      centerGrid.add(tfTipChordLen, 2, 12);
-
+      
+      cbChordDef.setOnAction(eventHandler -> {
+         switch(cbChordDef.getValue()) {
+         case "Select One":
+            this.showDefaultPropPanel();
+            break;
+         case "3 Pt":            
+            this.show3PTPropPanel();
+            break;         
+         default:
+            this.showDefaultPropPanel();
+            break;
+         }
+      });
+     
+      leftGrid.add(lblChordDef, 0, 2);
+      leftGrid.add(cbChordDef, 1, 2);      
+      
+      Label lblnumDescPts = new Label("Num Descritization pts: ");
+      TextField tfnumDescPts = new TextField();
+      tfnumDescPts.setUserData("tfnumDescPts");
+      tfnumDescPts.setText("10");
+      leftGrid.add(lblnumDescPts, 0, 3);
+      leftGrid.add(tfnumDescPts, 1, 3);
+      
+      Label lblAfDef = new Label("Airfoil definition");      
+      ComboBox<String> cbAfDef = new ComboBox<String>();
+      cbAfDef.getItems().add("Select One");
+      cbAfDef.getItems().add("All Airfoils Same");
+      cbAfDef.getItems().add("Define Airfoil per radial pt");   
+      
+      cbAfDef.setOnAction(actionEvent ->{
+         switch(cbAfDef.getValue()) {
+         case "Select One":
+            this.showDefaultBladeNacaPanel();
+            break;
+         case "All Airfoils Same":            
+            this.showAllSameAirfoilPanel();
+            break;
+         case "Define Airfoil per radial pt":            
+            this.showPerRadPtAirfoilPanel();
+            break;
+         default:
+            break;
+         }
+      });
+      
+      leftGrid.add(lblAfDef, 0, 4);
+      leftGrid.add(cbAfDef, 1, 4);
+      
+      
       Button btnCalculateGVT = new Button("Calculate");
       btnCalculateGVT.setOnAction(actionEvent -> {
          this.runGVT();
       });
-      centerGrid.add(btnCalculateGVT, 0, 14);
-
+      leftGrid.add(btnCalculateGVT, 0, 5);
+      
+      GridPane centerGrid = new GridPane();
+      this.createGVTPanelOptions(centerGrid);
+      
       this.propellerPane.setCenter(centerGrid);
+      
+      //this.propellerPane.setCenter(centerGrid);
+      this.propellerPane.setLeft(leftGrid);
       this.propellerTab.setContent(this.propellerPane);
    }
 
@@ -313,7 +349,105 @@ public class GUI extends Application{
       
    }
 
-   // --- Panel Creation + Switching
+   
+   
+   // --- GVT SubPanel Creation + Switching
+   private void createGVTPanelOptions(GridPane centerGrid) {
+      
+      this.defaultPropPane = new GridPane();
+      this.threePtBladePane = new GridPane();
+      
+      Label defPropLbl = new Label("Please select a Propeller Chord Definition to the left");
+      this.defaultPropPane.add(defPropLbl, 0, 0);
+      
+      //this.threePtBladePane
+      //propeller hub chord, max cord, max chord perc, end chord len
+      Label lblHubChordLen = new Label("Hub Chord Len: ");
+      TextField tfHubChordLen = new TextField();
+      this.threePtBladePane.add(lblHubChordLen, 0, 0);
+      this.threePtBladePane.add(tfHubChordLen, 1, 0);     
+
+      Label lblMaxChordLen = new Label("Max Chord Len: ");
+      TextField tfMaxChordLen = new TextField();
+      this.threePtBladePane.add(lblMaxChordLen, 0, 1);
+      this.threePtBladePane.add(tfMaxChordLen, 1, 1);
+
+      Label lblMaxChordLocPerc = new Label("Max Chord Loc Perc: ");
+      TextField tfMaxChordLocPerc = new TextField();
+      this.threePtBladePane.add(lblMaxChordLocPerc, 0, 2);
+      this.threePtBladePane.add(tfMaxChordLocPerc, 1, 2);
+
+      Label lblTipChordLen = new Label("Tip Chord Len: ");
+      TextField tfTipChordLen = new TextField();
+      this.threePtBladePane.add(lblTipChordLen, 0, 3);
+      this.threePtBladePane.add(tfTipChordLen, 1, 3);
+      
+      this.defaultPropPane.setVisible(false);
+      this.threePtBladePane.setVisible(false);
+      
+      centerGrid.add(this.defaultPropPane, 0, 0);
+      centerGrid.add(this.threePtBladePane, 0, 0);
+      
+      
+      this.defaultSetAirfoilPane = new GridPane();
+      this.allSameAirfoilPane = new GridPane();
+      this.perRadPtAirfoilPane = new GridPane();
+      
+      Label lbldefSetAf = new Label("Please select how to define airfoils to the left");
+      this.defaultSetAirfoilPane.add(lbldefSetAf, 0, 0);
+      
+      Label lblPropNACASeriesInput = new Label("NACA 4 Series Value");
+      this.naca4SeriesPane.add(lblPropNACASeriesInput, 0, 0, 1, 1);
+
+      TextField tfPropNACASeriesInput = new TextField();
+      tfPropNACASeriesInput.setUserData("tf4SeriesInput");
+      this.naca4SeriesPane.add(tfPropNACASeriesInput, 1, 0, 1, 1);
+      
+      // TODO: Do per radial point filling of NACA AF
+      
+      
+      this.defaultSetAirfoilPane.setVisible(false);
+      this.allSameAirfoilPane.setVisible(false);
+      this.perRadPtAirfoilPane.setVisible(false);
+      
+      centerGrid.add(this.defaultSetAirfoilPane, 0,1);
+      centerGrid.add(this.allSameAirfoilPane, 0,1);
+      centerGrid.add(this.perRadPtAirfoilPane, 0,1);
+      
+   }
+   
+   // --- Blade panel switchers
+   private void showDefaultPropPanel() {
+      this.defaultPropPane.setVisible(true);
+      this.threePtBladePane.setVisible(false);
+   }
+   
+   private void show3PTPropPanel() {
+      this.defaultPropPane.setVisible(false);
+      this.threePtBladePane.setVisible(true);
+   }
+   
+   // --- Blade af panel switchers
+   private void showDefaultBladeNacaPanel() {
+      this.defaultSetAirfoilPane.setVisible(true);
+      this.allSameAirfoilPane.setVisible(false);
+      this.perRadPtAirfoilPane.setVisible(false);
+   }
+   
+   private void showAllSameAirfoilPanel() {
+      this.defaultSetAirfoilPane.setVisible(false);
+      this.allSameAirfoilPane.setVisible(true);
+      this.perRadPtAirfoilPane.setVisible(false);
+   }
+   
+   private void showPerRadPtAirfoilPanel() {
+      this.defaultSetAirfoilPane.setVisible(false);
+      this.allSameAirfoilPane.setVisible(false);
+      this.perRadPtAirfoilPane.setVisible(true);
+   }
+   
+   
+   // --- Airfoil SubPanel Creation + Switching
    private void createAfPanelOptions(GridPane centerGrid) {
       this.defaultAfPane = new GridPane();
       this.naca4SeriesPane = new GridPane();
@@ -372,14 +506,8 @@ public class GUI extends Application{
    
    
    
-   // --- Running Functions
-   private void runGVT() {
-     
-      System.out.println("running GVT from func call");
-
-   }
-
-   @SuppressWarnings("unchecked")
+   // --- Running Functions   
+   
    private void runVPM() {
       if (!this.validateData()) {
          System.out.println("data NOT validated");
@@ -492,6 +620,11 @@ public class GUI extends Application{
       
    }
 
+   private void runGVT() {
+      
+      System.out.println("running GVT from func call");
+
+   }
 
 }
 
