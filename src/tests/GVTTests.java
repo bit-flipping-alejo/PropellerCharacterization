@@ -19,6 +19,7 @@ public class GVTTests {
       PropellerGeometry pg = new PropellerGeometry();
       pg.setRadialParameters(2.0, 0.1);
       pg.setChordParams(2.0, 4.0, 0.4, 3.0);
+      pg.generateRadialPositions();
       pg.generateChordLengths();
       
       double[] theChords = pg.getChords();
@@ -123,6 +124,12 @@ public class GVTTests {
          e.printStackTrace();
       }
       
+      double[] theChords = pg.getChords();
+      double[] theRads = pg.getRadiusPoints();
+      
+      XYChart chart = QuickChart.getChart("Blade Profile", "Rad position", "Chord Len", "chord len", theRads, theChords);      
+
+      new SwingWrapper(chart).displayChart();
       
       System.out.println("=== GVT Results ===");
       System.out.println("C_Thrust: " + gvt.getThrustCoefficient());

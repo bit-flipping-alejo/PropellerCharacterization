@@ -33,6 +33,9 @@ import solvers.VortexPanelSolver;
 
 import java.util.regex.Pattern;
 
+import org.knowm.xchart.QuickChart;
+import org.knowm.xchart.SwingWrapper;
+
 import geometryContainers.AirfoilGeometry;
 import geometryContainers.PropellerGeometry;
 
@@ -66,6 +69,8 @@ public class GUI extends Application{
    GridPane allSameAirfoilPane;
    GridPane perRadPtAirfoilPane;
    
+   GridPane gvtDisplayPane;
+   
    Button vpmCalculate ;
 
    private enum afInputType {
@@ -88,6 +93,16 @@ public class GUI extends Application{
       NONE;
    }
    bladeAfDefinition bladeAfDef;
+   
+   private enum washoutDefinition{
+      RMT,
+      PITCHTODIAMETERRATIO,
+      NONE;
+   }
+   
+   private washoutDefinition washoutDef;
+   
+   
    
    
    /* notes:
@@ -148,11 +163,7 @@ public class GUI extends Application{
       title.setFont(new Font(24.0));      
 
       this.airfoilPane.setTop(title);
-
-      GridPane centerGrid = new GridPane();
-      centerGrid.setHgap(10);
-      centerGrid.setVgap(10);
-
+      
       //
       // Center Grid Additions
       //    
@@ -191,8 +202,21 @@ public class GUI extends Application{
       });
       //centerGrid.add(btnCalculateVPM, 0, 2);
 
-      VBox nav = new VBox(lblAirfoil, cbAirfoilType, btnCalculateVPM);
+      //VBox nav = new VBox(lblAirfoil, cbAirfoilType, btnCalculateVPM);
+      GridPane nav = new GridPane();
+      nav.setHgap(10);
+      nav.setVgap(10);
+      nav.add(lblAirfoil, 0, 0);
+      nav.add(cbAirfoilType, 1, 0);
+      nav.add(btnCalculateVPM, 0, 3);
+      
+      
+      
       this.airfoilPane.setLeft(nav);
+      
+      GridPane centerGrid = new GridPane();
+      centerGrid.setHgap(10);
+      centerGrid.setVgap(10);
       this.createAfPanelOptions(centerGrid);
 
 
@@ -204,6 +228,8 @@ public class GUI extends Application{
    private void populatePropellerTabInputs(Stage primaryStage) {
       this.propellerPane = new BorderPane();
       this.propellerPane.setPadding(new Insets(10, 20, 10, 20));
+      this.gvtDisplayPane = new GridPane();
+      
       
       Label title = new Label("Propeller Solver [Goldsteins Vortex Theory]");
       title.setFont(new Font(24.0));
@@ -216,18 +242,35 @@ public class GUI extends Application{
       this.gvtControlPane.setHgap(10);
       this.gvtControlPane.setVgap(10);
 
+      // Number of Blades
+      Label lblNumBlades = new Label("Number of Blades: ");
+      TextField tfNumBlades = new TextField();
+      tfNumBlades.setUserData("tfNumBlades");
+      this.gvtControlPane.add(lblNumBlades, 0, 0);
+      this.gvtControlPane.add(tfNumBlades, 1, 0);
+      
       //propeller radius
       Label lblRadValue = new Label("Propeller Radius (m): ");
       TextField tfRadValue = new TextField();
-      this.gvtControlPane.add(lblRadValue, 0, 0);
-      this.gvtControlPane.add(tfRadValue, 1, 0);
+      tfRadValue.setUserData("tfRadValue");
+      this.gvtControlPane.add(lblRadValue, 0, 1);
+      this.gvtControlPane.add(tfRadValue, 1, 1);
 
       //propeller % hub
       Label lblPercHub = new Label("Percent Hub: ");
       TextField tfPercHub = new TextField();
-      this.gvtControlPane.add(lblPercHub, 0, 1);
-      this.gvtControlPane.add(tfPercHub, 1, 1);
+      tfPercHub.setUserData("tfPercHub");
+      this.gvtControlPane.add(lblPercHub, 0, 2);
+      this.gvtControlPane.add(tfPercHub, 1, 2);
 
+      //Vinfinity
+      Label lblVinf = new Label("Vinfinity (m/s): ");
+      TextField tfVinf = new TextField();
+      tfVinf.setUserData("tfVinf");
+      this.gvtControlPane.add(lblVinf, 0, 3);
+      this.gvtControlPane.add(tfVinf, 1, 3);
+
+      
       //propeller, definitions combobox. default is 3 pt linear
       Label lblChordDef = new Label("Propeller chord definition");      
       ComboBox<String> cbChordDef = new ComboBox<String>();
@@ -251,8 +294,8 @@ public class GUI extends Application{
          }
       });
      
-      this.gvtControlPane.add(lblChordDef, 0, 2);
-      this.gvtControlPane.add(cbChordDef, 1, 2);      
+      this.gvtControlPane.add(lblChordDef, 0, 4);
+      this.gvtControlPane.add(cbChordDef, 1, 4);      
       
       Label lblnumDescPts = new Label("Num Descritization pts: ");
       TextField tfnumDescPts = new TextField();
@@ -267,8 +310,8 @@ public class GUI extends Application{
          }
          
       });
-      this.gvtControlPane.add(lblnumDescPts, 0, 3);
-      this.gvtControlPane.add(tfnumDescPts, 1, 3);
+      this.gvtControlPane.add(lblnumDescPts, 0, 5);
+      this.gvtControlPane.add(tfnumDescPts, 1, 5);
       
       Label lblAfDef = new Label("Airfoil definition");      
       ComboBox<String> cbAfDef = new ComboBox<String>();
@@ -297,36 +340,47 @@ public class GUI extends Application{
          }
       });
       
-      this.gvtControlPane.add(lblAfDef, 0, 4);
-      this.gvtControlPane.add(cbAfDef, 1, 4);
+      this.gvtControlPane.add(lblAfDef, 0, 6);
+      this.gvtControlPane.add(cbAfDef, 1, 6);
       
       
       Label lblOmega = new Label("Rotational Speed (rad/s): ");
       TextField tfOmega = new TextField();
-      tfnumDescPts.setUserData("tfOmega");
-      this.gvtControlPane.add(lblOmega, 0, 5);
-      this.gvtControlPane.add(tfOmega, 1, 5);
+      tfOmega.setUserData("tfOmega");
+      this.gvtControlPane.add(lblOmega, 0, 7);
+      this.gvtControlPane.add(tfOmega, 1, 7);
       
       
       Label lblWashoutDef = new Label("Geometric Washout:");      
       ComboBox<String> cbWashoutDef = new ComboBox<String>();
       cbWashoutDef.getItems().add("Select One");
       cbWashoutDef.getItems().add("Pitch to Diameter");
-      this.gvtControlPane.add(lblWashoutDef, 0, 6);
-      this.gvtControlPane.add(cbWashoutDef, 1, 6);
+      
+      cbWashoutDef.setOnAction(eventHandler -> {
+         switch(cbWashoutDef.getValue()) {
+         case "Pitch to Diameter":
+            this.washoutDef = washoutDefinition.PITCHTODIAMETERRATIO;
+            break;
+         default:
+            this.washoutDef = washoutDefinition.NONE;
+         }
+      });
+      
+      this.gvtControlPane.add(lblWashoutDef, 0, 8);
+      this.gvtControlPane.add(cbWashoutDef, 1, 8);
       
       Label lblChordLinePitch = new Label("Chord Line Pitch: ");
       TextField tfChordLinePitch = new TextField();
-      tfnumDescPts.setUserData("tfChordLinePitch");
-      this.gvtControlPane.add(lblChordLinePitch, 0, 7);
-      this.gvtControlPane.add(tfChordLinePitch, 1, 7);
+      tfChordLinePitch.setUserData("tfChordLinePitch");
+      this.gvtControlPane.add(lblChordLinePitch, 0, 9);
+      this.gvtControlPane.add(tfChordLinePitch, 1, 9);
       
       
       Button btnCalculateGVT = new Button("Calculate");
       btnCalculateGVT.setOnAction(actionEvent -> {
          this.runGVT();
       });
-      this.gvtControlPane.add(btnCalculateGVT, 0, 8);
+      this.gvtControlPane.add(btnCalculateGVT, 0, 10);
       
       GridPane centerGrid = new GridPane();
       this.createGVTPanelOptions(centerGrid);
@@ -335,9 +389,17 @@ public class GUI extends Application{
       
       //this.propellerPane.setCenter(centerGrid);
       this.propellerPane.setLeft(this.gvtControlPane);
+      //this.propellerPane.setBottom(this.gvtDisplayPane);
+      this.propellerPane.setRight(this.gvtDisplayPane);
       this.propellerTab.setContent(this.propellerPane);
+      
    }
 
+   
+   
+   
+   
+   
    // --- Data Validation
    private boolean validateData() {
       
@@ -468,6 +530,10 @@ public class GUI extends Application{
       }
       return true;
    }
+   
+   
+   
+   
    
    // --- GVT SubPanel Creation + Switching
    private void createGVTPanelOptions(GridPane centerGrid) {
@@ -651,6 +717,26 @@ public class GUI extends Application{
       return null;
    }
    
+   private double getTextFieldAsDouble(Parent parent, String data) {
+      Object toChk = this.getByUserData(parent, data);
+      if (toChk == null) {
+         // this could probably be better :(
+         return Double.MAX_VALUE;
+      }
+      TextField tf = (TextField) toChk;      
+      return Double.parseDouble(tf.getText());
+   }
+   
+   private int getTextFieldAsInt(Parent parent, String data) {      
+      Object toChk = this.getByUserData(parent, data);
+      if (toChk == null) {
+         // this could probably be better :(
+         return Integer.MAX_VALUE;
+      }
+      TextField tf = (TextField) toChk;      
+      return Integer.parseInt(tf.getText());
+   }
+   
    
    // --- Running Functions   
    
@@ -732,10 +818,10 @@ public class GUI extends Application{
       
       // plot Pressure points
       NumberAxis xAxisP = new NumberAxis();
-      xAxisAF.setLabel("Normalized Chord");
+      xAxisP.setLabel("Normalized Chord");
       
       NumberAxis yAxisP = new NumberAxis();
-      yAxisAF.setLabel("Pressure");
+      yAxisP.setLabel("Pressure");
       
       Object testChartP = this.getByUserData(this.naca4SeriesPane, "pChart");
       if (!(testChartP == null)) {
@@ -773,29 +859,177 @@ public class GUI extends Application{
       }
       
       AirfoilGeometry ag = new AirfoilGeometry();
+      PropellerGeometry pg = new PropellerGeometry();  
       
       if (this.bladeAfDef == bladeAfDefinition.ALLSAME) {
          TextField nacaNum = (TextField) this.getByUserData( this.allSameAirfoilPane , "tfPropNACASeriesInput");
+         
          ag.becomeNACA4Series(Integer.parseInt(Character.toString(nacaNum.getText().charAt(0))), 
                Integer.parseInt(Character.toString(nacaNum.getText().charAt(1))), 
                Integer.parseInt(Character.toString(nacaNum.getText().charAt(2))), 
                Integer.parseInt(Character.toString(nacaNum.getText().charAt(3))));
-         
+         pg.setRadialPtsToSameAirfoil(ag);
       }
       
-      PropellerGeometry pg = new PropellerGeometry();      
+          
+      
+      if (this.washoutDef == washoutDefinition.PITCHTODIAMETERRATIO) {
+         pg.setGeometricWashoutDefinition(PropellerGeometry.GEOMETRICWASHOUT.PITCH_TO_DIAMETER);          
+         double clp = this.getTextFieldAsDouble(this.gvtControlPane, "tfChordLinePitch");         
+         pg.setChordLinePitch(clp);
+         
+      } else {
+         // not implemented so return
+         System.out.println("Not implemented");
+      }
+      
+      double omega = this.getTextFieldAsDouble(this.gvtControlPane, "tfOmega");  
+      System.out.println("Omega is: " + omega);
+      pg.setOmega(omega);
+      
+      
+      int numBlades = this.getTextFieldAsInt(this.gvtControlPane, "tfNumBlades");
+      System.out.println("numBlades is: " + numBlades);
+      pg.setNumberOfBlades(numBlades);
+      
+      double Diameter = this.getTextFieldAsDouble(this.gvtControlPane, "tfRadValue"); 
+      double percHub = this.getTextFieldAsDouble(this.gvtControlPane, "tfPercHub");
+      System.out.println("Diameter is: " + Diameter + " perc hub is: " + (percHub/100));
+      pg.setRadialParameters( Diameter , (percHub / 100.0) );   
+      pg.generateRadialPositions();
+      
+      
+      double hubChordLen = this.getTextFieldAsDouble(this.threePtBladePane, "tfHubChordLen"); 
+      double maxChordLen = this.getTextFieldAsDouble(this.threePtBladePane, "tfMaxChordLen");
+      double maxChordPerc = this.getTextFieldAsDouble(this.threePtBladePane, "tfMaxChordLocPerc"); 
+      double tipChordLen = this.getTextFieldAsDouble(this.threePtBladePane, "tfTipChordLen");
+      System.out.println("hubChordLen is: " + hubChordLen + " maxChordLen is: " + maxChordLen + 
+            " maxChordPerc: " + maxChordPerc + " tipChordLen " + tipChordLen);
+      
+      pg.setChordParams(hubChordLen, maxChordLen, maxChordPerc, tipChordLen);
+      pg.generateChordLengths();
       
       
       
+      GoldsteinVortexTheorySolver gvt = new GoldsteinVortexTheorySolver();
+      gvt.setPropeller(pg);
+      double Vinf = this.getTextFieldAsDouble(this.gvtControlPane, "tfVinf");      
+      gvt.setVinf(Vinf); // m/s
+     
+       
+      try {
+         gvt.runGVT();
+      } catch (Exception e) {
+         // TODO Auto-generated catch block
+         System.out.println("Exceeded max iterations");
+         e.printStackTrace();
+      }
       
-      // get control variables
+      System.out.println("=== GVT Results ===");
+      System.out.println("C_Thrust: " + gvt.getThrustCoefficient());
+      System.out.println("C_Torque: " + gvt.getTorqueCoefficient());
+      System.out.println("C_Power: " + gvt.getPowerCoefficient());
       
-      
-      System.out.println("running GVT from func call");
+      this.displayGVTResults(gvt, pg);
 
+   }
+   
+   private void displayGVTResults(GoldsteinVortexTheorySolver gvt, PropellerGeometry pg) {
+      
+      // this.gvtDisplayPane
+      ColumnConstraints c1 = new ColumnConstraints();
+      c1.setMaxWidth(300);
+      this.gvtDisplayPane.getColumnConstraints().add(c1);
+      
+      // plot chord
+      NumberAxis xAxisRad = new NumberAxis();
+      xAxisRad.setLabel("Radius");
+      
+      NumberAxis yAxisChord = new NumberAxis();
+      yAxisChord.setLabel("X-Sect Chord Length");
+      
+      Object testChartRad = this.getByUserData(this.gvtDisplayPane, "chordChart");
+      if (!(testChartRad == null)) {
+         //delete everything
+         this.gvtDisplayPane.getChildren().remove((LineChart<Number, Number>) testChartRad);
+      }
+      
+      LineChart<Number, Number> chordChart = new LineChart<Number, Number>(xAxisRad, yAxisChord);
+      chordChart.setUserData("chordChart");
+      XYChart.Series<Number, Number> chordSeries = new XYChart.Series<Number, Number>();
+      
+      double[] theChords = pg.getChords();
+      double[] theRads = pg.getRadiusPoints();
+      
+      for (int i = 0; i < pg.getNumDescPoints(); i++) { 
+         chordSeries.getData().add(new XYChart.Data<Number, Number>( theRads[i], theChords[i] ) ); 
+      }
+      
+      chordSeries.setName("Chord Length");      
+      chordChart.getData().add(chordSeries);   
+      chordChart.setLegendSide(Side.BOTTOM);      
+      chordChart.setLegendVisible(true);
+      
+      this.gvtDisplayPane.add(chordChart, 0,0, 1,1);
+      
+      
+      
+      
+      NumberAxis xAxisCl = new NumberAxis();
+      xAxisCl.setLabel("Radius");
+      
+      NumberAxis yAxisCl = new NumberAxis();
+      yAxisChord.setLabel("Coeff of Lift");
+      
+      Object testChartCl = this.getByUserData(this.gvtDisplayPane, "clChart");
+      if (!(testChartCl == null)) {
+         //delete everything
+         this.gvtDisplayPane.getChildren().remove((LineChart<Number, Number>) testChartCl);
+      }
+      
+      LineChart<Number, Number> clChart = new LineChart<Number, Number>(xAxisRad, yAxisCl);
+      clChart.setUserData("clChart");
+      XYChart.Series<Number, Number> clSeries = new XYChart.Series<Number, Number>();
+      
+      //double[] theChords = pg.getChords();
+      double[] theCls = gvt.getCl();
+      
+      for (int i = 0; i < pg.getNumDescPoints(); i++) { 
+         clSeries.getData().add(new XYChart.Data<Number, Number>( theRads[i], theCls[i] ) ); 
+      }
+      
+      clSeries.setName("Cl");      
+      clChart.getData().add(clSeries);   
+      clChart.setLegendSide(Side.BOTTOM);      
+      clChart.setLegendVisible(true);
+      
+      this.gvtDisplayPane.add(clChart, 0,1,1,1);
+      
+      //this.propellerPane.setRight(this.gvtDisplayPane);
+      
+      
    }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -62,18 +62,18 @@ public class PropellerGeometry {
    
    public void generateChordLengths() {
       double radMinusHub = ((this.dp/2.0) - ((this.dp/2.0) * this.hubDiameterPerc));
-      double incPerIter = radMinusHub/(this.numDescPoints - 1);
+      double incPerIter = radMinusHub/(this.numDescPoints );//- 1);
       double maxChordPoint = Math.floor((radMinusHub * this.maxChordPerc ) / incPerIter) ;
       
       for (int i = 0; i < this.numDescPoints; i++) {
          if ( i < maxChordPoint ) {            
             this.chords[i] = this.hubChordLen + ( (this.maxChordLen - this.hubChordLen) * (i / maxChordPoint) );            
          } else {
-            this.chords[i] = this.maxChordLen - ( ( this.maxChordLen - this.tipChordLen ) * ( (i - maxChordPoint) / (this.numDescPoints - maxChordPoint) ) );
+            this.chords[i] = this.maxChordLen - ( ( this.maxChordLen - this.tipChordLen ) * ( (i - maxChordPoint) / (this.numDescPoints - maxChordPoint - 1) ) );
          }  
-         //this.radiusPoints[i] = i * incPerIter;
+         
       }
-      
+      //this.chords[ this.numDescPoints - 1] = this.tipChordLen;
    }
 
    // in degrees
