@@ -56,7 +56,9 @@ public class GUI extends Application{
    GridPane naca4SeriesPane;
 
    
-   // GVT Tab Panes   
+   // GVT Tab Panes 
+   GridPane gvtControlPane;
+   
    GridPane defaultPropPane;
    GridPane threePtBladePane;
    
@@ -73,6 +75,21 @@ public class GUI extends Application{
 
    afInputType aifoilType;
 
+   private enum bladeDefinitionType{
+      THREEPT,
+      NONE;
+   }
+   
+   bladeDefinitionType bladeType;
+   
+   private enum bladeAfDefinition{
+      PERRADPT,
+      ALLSAME,
+      NONE;
+   }
+   bladeAfDefinition bladeAfDef;
+   
+   
    /* notes:
     *    whole window is called the stage
     *    content in window is called scene
@@ -195,21 +212,21 @@ public class GUI extends Application{
       topTile.setAlignment(Pos.TOP_CENTER);
       this.propellerPane.setTop(title);
 
-      GridPane leftGrid = new GridPane();
-      leftGrid.setHgap(10);
-      leftGrid.setVgap(10);
+      this.gvtControlPane = new GridPane();
+      this.gvtControlPane.setHgap(10);
+      this.gvtControlPane.setVgap(10);
 
       //propeller radius
       Label lblRadValue = new Label("Propeller Radius (m): ");
       TextField tfRadValue = new TextField();
-      leftGrid.add(lblRadValue, 0, 0);
-      leftGrid.add(tfRadValue, 1, 0);
+      this.gvtControlPane.add(lblRadValue, 0, 0);
+      this.gvtControlPane.add(tfRadValue, 1, 0);
 
       //propeller % hub
       Label lblPercHub = new Label("Percent Hub: ");
       TextField tfPercHub = new TextField();
-      leftGrid.add(lblPercHub, 0, 1);
-      leftGrid.add(tfPercHub, 1, 1);
+      this.gvtControlPane.add(lblPercHub, 0, 1);
+      this.gvtControlPane.add(tfPercHub, 1, 1);
 
       //propeller, definitions combobox. default is 3 pt linear
       Label lblChordDef = new Label("Propeller chord definition");      
@@ -220,58 +237,96 @@ public class GUI extends Application{
       cbChordDef.setOnAction(eventHandler -> {
          switch(cbChordDef.getValue()) {
          case "Select One":
+            this.bladeType = bladeDefinitionType.NONE;
             this.showDefaultPropPanel();
             break;
          case "3 Pt":            
+            this.bladeType = bladeDefinitionType.THREEPT;
             this.show3PTPropPanel();
             break;         
          default:
+            this.bladeType = bladeDefinitionType.NONE;
             this.showDefaultPropPanel();
             break;
          }
       });
      
-      leftGrid.add(lblChordDef, 0, 2);
-      leftGrid.add(cbChordDef, 1, 2);      
+      this.gvtControlPane.add(lblChordDef, 0, 2);
+      this.gvtControlPane.add(cbChordDef, 1, 2);      
       
       Label lblnumDescPts = new Label("Num Descritization pts: ");
       TextField tfnumDescPts = new TextField();
       tfnumDescPts.setUserData("tfnumDescPts");
       tfnumDescPts.setText("10");
-      leftGrid.add(lblnumDescPts, 0, 3);
-      leftGrid.add(tfnumDescPts, 1, 3);
+      tfnumDescPts.setOnAction(eventHandler -> {
+         try {
+            Integer newDescPt = Integer.parseInt(tfnumDescPts.getText());
+            
+         } catch (Exception e) {
+            tfnumDescPts.setText("10");
+         }
+         
+      });
+      this.gvtControlPane.add(lblnumDescPts, 0, 3);
+      this.gvtControlPane.add(tfnumDescPts, 1, 3);
       
       Label lblAfDef = new Label("Airfoil definition");      
       ComboBox<String> cbAfDef = new ComboBox<String>();
       cbAfDef.getItems().add("Select One");
       cbAfDef.getItems().add("All Airfoils Same");
-      cbAfDef.getItems().add("Define Airfoil per radial pt");   
+      //cbAfDef.getItems().add("Define Airfoil per radial pt");   
       
       cbAfDef.setOnAction(actionEvent ->{
          switch(cbAfDef.getValue()) {
          case "Select One":
+            this.bladeAfDef = bladeAfDefinition.NONE;
             this.showDefaultBladeNacaPanel();
             break;
-         case "All Airfoils Same":            
+         case "All Airfoils Same":   
+            this.bladeAfDef = bladeAfDefinition.ALLSAME;
             this.showAllSameAirfoilPanel();
             break;
-         case "Define Airfoil per radial pt":            
+         case "Define Airfoil per radial pt":  
+            this.bladeAfDef = bladeAfDefinition.PERRADPT;
             this.showPerRadPtAirfoilPanel();
             break;
          default:
+            this.bladeAfDef = bladeAfDefinition.NONE;
+            this.showDefaultBladeNacaPanel();
             break;
          }
       });
       
-      leftGrid.add(lblAfDef, 0, 4);
-      leftGrid.add(cbAfDef, 1, 4);
+      this.gvtControlPane.add(lblAfDef, 0, 4);
+      this.gvtControlPane.add(cbAfDef, 1, 4);
+      
+      
+      Label lblOmega = new Label("Rotational Speed (rad/s): ");
+      TextField tfOmega = new TextField();
+      tfnumDescPts.setUserData("tfOmega");
+      this.gvtControlPane.add(lblOmega, 0, 5);
+      this.gvtControlPane.add(tfOmega, 1, 5);
+      
+      
+      Label lblWashoutDef = new Label("Geometric Washout:");      
+      ComboBox<String> cbWashoutDef = new ComboBox<String>();
+      cbWashoutDef.getItems().add("Select One");
+      cbWashoutDef.getItems().add("Pitch to Diameter");
+      this.gvtControlPane.add(lblWashoutDef, 0, 6);
+      this.gvtControlPane.add(cbWashoutDef, 1, 6);
+      
+      Label lblChordLinePitch = new Label("Chord Line Pitch: ");
+      TextField tfChordLinePitch = new TextField();
+      tfnumDescPts.setUserData("tfChordLinePitch");
+      this.gvtControlPane.add(lblChordLinePitch, 0, 7);
+      this.gvtControlPane.add(tfChordLinePitch, 1, 7);
       
       
       Button btnCalculateGVT = new Button("Calculate");
       btnCalculateGVT.setOnAction(actionEvent -> {
          this.runGVT();
       });
-      leftGrid.add(btnCalculateGVT, 0, 5);
+      this.gvtControlPane.add(btnCalculateGVT, 0, 8);
       
       GridPane centerGrid = new GridPane();
       this.createGVTPanelOptions(centerGrid);
@@ -279,7 +334,7 @@ public class GUI extends Application{
       this.propellerPane.setCenter(centerGrid);
       
       //this.propellerPane.setCenter(centerGrid);
-      this.propellerPane.setLeft(leftGrid);
+      this.propellerPane.setLeft(this.gvtControlPane);
       this.propellerTab.setContent(this.propellerPane);
    }
 
@@ -289,48 +344,14 @@ public class GUI extends Application{
       if (this.airfoilTab.isSelected()) {
          
          switch (this.aifoilType) {
-         case NONE:
-            return false;
          case NACA4SERIES:
-            Object tochk = this.getByUserData(this.naca4SeriesPane, "tf4SeriesInput");
-            if (tochk == null) {
-               return false;
-            }
-            TextField toCheck = (TextField) tochk;
             
-            //validate data here 
-            //NACA Number
-            int len = toCheck.getText().length();
-            if (len != 4) {
-               return false;
-            }
-            
-            String pattern = "\\d*[a-zA-Z]+";            
-            Boolean isBad = Pattern.matches(pattern, toCheck.getText());
-            if (isBad) {
-               System.out.println("Is regex bad");
-               return false;
-            }
-            
-            int naca4val = Integer.parseInt( toCheck.getText() );
-            if (! ( (naca4val > 0) && (naca4val < 9999) )) {               
-               System.out.println("is out of numerical bounds");
+            if (!this.validateNaca4SeriesData(this.naca4SeriesPane, "tf4SeriesInput")) {
                return false;
             }
             
             // AoA
-            Object tochkAoA = this.getByUserData( this.naca4SeriesPane , "tfAOA");
-            if (tochkAoA == null) {
-               return false;
-            }
-            
-            TextField toCheckAoA = (TextField) tochkAoA;            
-            Boolean isBadAoA = Pattern.matches(pattern, toCheckAoA.getText());
-            if (isBadAoA) {
-               return false;
-            }
-            double aoaVal = (double) Double.parseDouble( toCheckAoA.getText() );
-            if (Math.abs(aoaVal) > 12) {
+            if (!this.validataThinAirfoilAoA(this.naca4SeriesPane , "tfAOA")) {
                return false;
             }
             
@@ -340,8 +361,43 @@ public class GUI extends Application{
          }
          
       } else if (this.propellerTab.isSelected()) {
+         // Blade Type
+         switch (this.bladeType) {
+         case THREEPT:
+            
+            if (!this.validateNoLettersInTextField( this.threePtBladePane, "tfHubChordLen" )) {
+               return false;
+            }
+            if (!this.validateNoLettersInTextField( this.threePtBladePane, "tfMaxChordLen" )) {
+               return false;
+            }
+            if (!this.validateNoLettersInTextField( this.threePtBladePane, "tfMaxChordLocPerc" )) {
+               return false;
+            }
+            if (!this.validateNoLettersInTextField( this.threePtBladePane, "tfTipChordLen" )) {
+               return false;
+            }
+            
+         default :
+         }
+         
+         // Airfoil Type
+         switch (this.bladeAfDef) {
+         case PERRADPT:
+            
+         case ALLSAME:
+            if (!this.validateNaca4SeriesData( this.allSameAirfoilPane, "tfPropNACASeriesInput" )) {
+               return false;
+            }
+         default:
+            
+         }
+         
+         return true;
          
       } else {
+         
+         // should be unreachable but left as room for growth
          
       }
       
@@ -349,10 +405,76 @@ public class GUI extends Application{
       
    }
 
+   private boolean validateNaca4SeriesData(Parent parent, String userData) {
+      
+      Object tochk = this.getByUserData(parent, userData);
+      if (tochk == null) {
+         return false;
+      }
+      TextField toCheck = (TextField) tochk;
+      
+    //validate data here 
+      //NACA Number            
+      int len = toCheck.getText().length();
+      if (len != 4) {
+         return false;
+      }
+      
+      String pattern = "\\d*[a-zA-Z]+";            
+      Boolean isBad = Pattern.matches(pattern, toCheck.getText());
+      if (isBad) {
+         System.out.println("Is regex bad");
+         return false;
+      }
+      
+      int naca4val = Integer.parseInt( toCheck.getText() );
+      if (! ( (naca4val > 0) && (naca4val < 9999) )) {               
+         System.out.println("is out of numerical bounds");
+         return false;
+      }
+      
+      
+      return true;
+   }
    
+   private boolean validataThinAirfoilAoA(Parent parent, String userData) {
+      
+      Object tochk = this.getByUserData(parent, userData);
+      if (tochk == null) {
+         return false;
+      }
+      TextField toCheckAoA = (TextField) tochk;
+      
+      String pattern = "\\d*[a-zA-Z]+";
+      Boolean isBadAoA = Pattern.matches(pattern, toCheckAoA.getText());
+      if (isBadAoA) {
+         return false;
+      }
+      double aoaVal = (double) Double.parseDouble( toCheckAoA.getText() );
+      if (Math.abs(aoaVal) > 12) {
+         return false;
+      }
+      return true;
+   }
+   
+   private boolean validateNoLettersInTextField(Parent parent, String userData) {
+      Object toChk = this.getByUserData(parent, userData);
+      TextField toCheck = (TextField) toChk;
+      String pattern = "\\d*[a-zA-Z]+";            
+      Boolean isBad = Pattern.matches(pattern, toCheck.getText());
+      if (isBad) {
+         System.out.println("Is regex bad");
+         return false;
+      }
+      return true;
+   }
    
    // --- GVT SubPanel Creation + Switching
    private void createGVTPanelOptions(GridPane centerGrid) {
+      
+      centerGrid.setHgap(20);
+      centerGrid.setVgap(20);
+      
       
       this.defaultPropPane = new GridPane();
       this.threePtBladePane = new GridPane();
@@ -364,21 +486,25 @@ public class GUI extends Application{
       //propeller hub chord, max cord, max chord perc, end chord len
       Label lblHubChordLen = new Label("Hub Chord Len: ");
       TextField tfHubChordLen = new TextField();
+      tfHubChordLen.setUserData("tfHubChordLen");
       this.threePtBladePane.add(lblHubChordLen, 0, 0);
       this.threePtBladePane.add(tfHubChordLen, 1, 0);     
 
       Label lblMaxChordLen = new Label("Max Chord Len: ");
       TextField tfMaxChordLen = new TextField();
+      tfMaxChordLen.setUserData("tfMaxChordLen");
       this.threePtBladePane.add(lblMaxChordLen, 0, 1);
       this.threePtBladePane.add(tfMaxChordLen, 1, 1);
 
       Label lblMaxChordLocPerc = new Label("Max Chord Loc Perc: ");
       TextField tfMaxChordLocPerc = new TextField();
+      tfMaxChordLocPerc.setUserData("tfMaxChordLocPerc");
       this.threePtBladePane.add(lblMaxChordLocPerc, 0, 2);
       this.threePtBladePane.add(tfMaxChordLocPerc, 1, 2);
 
       Label lblTipChordLen = new Label("Tip Chord Len: ");
       TextField tfTipChordLen = new TextField();
+      tfTipChordLen.setUserData("tfTipChordLen");
       this.threePtBladePane.add(lblTipChordLen, 0, 3);
       this.threePtBladePane.add(tfTipChordLen, 1, 3);
       
@@ -388,6 +514,7 @@ public class GUI extends Application{
       centerGrid.add(this.defaultPropPane, 0, 0);
       centerGrid.add(this.threePtBladePane, 0, 0);
       
+      // Set airfoil panes
       
       this.defaultSetAirfoilPane = new GridPane();
       this.allSameAirfoilPane = new GridPane();
@@ -397,14 +524,14 @@ public class GUI extends Application{
       this.defaultSetAirfoilPane.add(lbldefSetAf, 0, 0);
       
       Label lblPropNACASeriesInput = new Label("NACA 4 Series Value");
-      this.naca4SeriesPane.add(lblPropNACASeriesInput, 0, 0, 1, 1);
+      this.allSameAirfoilPane.add(lblPropNACASeriesInput, 0, 0);
 
       TextField tfPropNACASeriesInput = new TextField();
-      tfPropNACASeriesInput.setUserData("tf4SeriesInput");
-      this.naca4SeriesPane.add(tfPropNACASeriesInput, 1, 0, 1, 1);
+      tfPropNACASeriesInput.setUserData("tfPropNACASeriesInput");
+      this.allSameAirfoilPane.add(tfPropNACASeriesInput, 1, 0);
       
       // TODO: Do per radial point filling of NACA AF
-      
+      //this.buildPerRadPtAfPanel();
       
       this.defaultSetAirfoilPane.setVisible(false);
       this.allSameAirfoilPane.setVisible(false);
@@ -413,6 +540,25 @@ public class GUI extends Application{
       centerGrid.add(this.defaultSetAirfoilPane, 0,1);
       centerGrid.add(this.allSameAirfoilPane, 0,1);
       centerGrid.add(this.perRadPtAirfoilPane, 0,1);
+      
+   }
+   
+   private void buildPerRadPtAfPanel() {
+      //this.perRadPtAirfoilPane
+      Object numPtsChk = getByUserData(this.gvtControlPane, "tfnumDescPts" );
+      if (numPtsChk == null) {
+         return;
+      }
+      TextField numPtstf = (TextField) numPtsChk;
+      Integer numPts = Integer.parseInt( numPtstf.getText() );
+      
+      Label lblSelRadPt = new Label("Airfoil definition");      
+      ComboBox<String> cbSelRadpt = new ComboBox<String>();
+      
+      for (int i = 0; i < numPts; i++) {
+         cbSelRadpt.getItems().add( Integer.toString(i) );
+      }
+      
       
    }
    
@@ -504,9 +650,6 @@ public class GUI extends Application{
       
       return null;
    }
-
-   
-   
    
    
    // --- Running Functions   
@@ -624,6 +767,29 @@ public class GUI extends Application{
    }
 
    private void runGVT() {
+      if (!this.validateData()) {
+         System.out.println("GVT data NOT validated");
+         return;
+      }
+      
+      AirfoilGeometry ag = new AirfoilGeometry();
+      
+      if (this.bladeAfDef == bladeAfDefinition.ALLSAME) {
+         TextField nacaNum = (TextField) this.getByUserData( this.allSameAirfoilPane , "tfPropNACASeriesInput");
+         ag.becomeNACA4Series(Integer.parseInt(Character.toString(nacaNum.getText().charAt(0))), 
+               Integer.parseInt(Character.toString(nacaNum.getText().charAt(1))), 
+               Integer.parseInt(Character.toString(nacaNum.getText().charAt(2))), 
+               Integer.parseInt(Character.toString(nacaNum.getText().charAt(3))));
+         
+      }
+      
+      PropellerGeometry pg = new PropellerGeometry();      
+      
+      
+      
+      
+      // get control variables
+      
       
       System.out.println("running GVT from func call");
 
