@@ -447,6 +447,9 @@ public class GUI extends Application{
    }
    
    
+   
+   
+   
    // --- Airfoil SubPanel Creation + Switching
    private void createAfPanelOptions(GridPane centerGrid) {
       this.defaultAfPane = new GridPane();
