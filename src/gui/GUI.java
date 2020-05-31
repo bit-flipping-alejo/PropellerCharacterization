@@ -675,18 +675,18 @@ public class GUI extends Application{
       this.defaultAfPane.add(defaultLabel, 0, 0);
 
       Label af4SeriesInput = new Label("NACA 4 Series Value");
-      this.naca4SeriesPane.add(af4SeriesInput, 0, 0, 1, 1);
+      this.naca4SeriesPane.add(af4SeriesInput, 0, 0);
 
       TextField tf4SeriesInput = new TextField();
       tf4SeriesInput.setUserData("tf4SeriesInput");
-      this.naca4SeriesPane.add(tf4SeriesInput, 1, 0, 1, 1);
+      this.naca4SeriesPane.add(tf4SeriesInput, 1, 0);
 
       Label lblAOA = new Label("Angle of Attack (deg): ");
-      this.naca4SeriesPane.add(lblAOA, 0, 1, 1, 1);
+      this.naca4SeriesPane.add(lblAOA, 0, 1);
 
       TextField tfAOA = new TextField();
       tfAOA.setUserData("tfAOA");
-      this.naca4SeriesPane.add(tfAOA, 1, 1, 1, 1);
+      this.naca4SeriesPane.add(tfAOA, 1, 1);
       
       //centerGrid.add(pointsInputPane, 0, 8);      
       //centerGrid.add(naca5SeriesPane, 0, 8);
@@ -765,6 +765,8 @@ public class GUI extends Application{
       vpm.runVPMSolver();
       
       // Add Labels
+      //this.naca4SeriesPane.getChildren().clear();
+      
       Object testLblCL = this.getByUserData(this.naca4SeriesPane, "lblCL");
       if (!(testLblCL == null)) {
          //delete everything
@@ -780,6 +782,7 @@ public class GUI extends Application{
       }
       Label lblCD = new Label("Coeff of Drag: " + vpm.getCd());
       lblCD.setUserData("lblCD");
+      
       Object testLblCM = this.getByUserData(this.naca4SeriesPane, "lblCM");
       if (!(testLblCM == null)) {
          //delete everything
@@ -788,9 +791,9 @@ public class GUI extends Application{
       Label lblCM = new Label("Coeff of Moment (quarter chord): " + vpm.getCm());
       lblCM.setUserData("lblCM");
       
-      this.naca4SeriesPane.add(lblCL, 0, 3, Integer.MAX_VALUE, 1 );
-      this.naca4SeriesPane.add(lblCD, 0, 4, Integer.MAX_VALUE, 1 );
-      this.naca4SeriesPane.add(lblCM, 0, 5, Integer.MAX_VALUE, 1 );
+      this.naca4SeriesPane.add(lblCL, 0, 3);
+      this.naca4SeriesPane.add(lblCD, 0, 4 );
+      this.naca4SeriesPane.add(lblCM, 0, 5 );
       
       
       // plot AF points
@@ -817,7 +820,7 @@ public class GUI extends Application{
       afSeries.setName("Airfoil Points");
       afChart.getData().add(afSeries);
       afChart.setLegendVisible(false);
-      this.naca4SeriesPane.add(afChart, 0, 6, 1, Integer.MAX_VALUE);
+      this.naca4SeriesPane.add(afChart, 0, 6);
       
       // plot Pressure points
       NumberAxis xAxisP = new NumberAxis();
@@ -850,7 +853,7 @@ public class GUI extends Application{
       pChart.getData().add(pLoSeries);   
       pChart.setLegendSide(Side.BOTTOM);      
       afChart.setLegendVisible(true);
-      this.naca4SeriesPane.add(pChart, 1, 6, 1, Integer.MAX_VALUE);
+      this.naca4SeriesPane.add(pChart, 1, 6);
       
       
    }
@@ -923,10 +926,10 @@ public class GUI extends Application{
       try {
          gvt.runGVT();
       } catch (Exception e) {
-         // TODO Auto-generated catch block
+         
          System.out.println("Exceeded max iterations");
          this.displayErrorPane(gvt);
-         e.printStackTrace();
+         //e.printStackTrace();
          return;
       }
       
@@ -1008,7 +1011,7 @@ public class GUI extends Application{
       NumberAxis yAxisCl = new NumberAxis();
       yAxisCl.setLabel("Coeff of Lift");
       
-      LineChart<Number, Number> clChart = new LineChart<Number, Number>(xAxisRad, yAxisCl);
+      LineChart<Number, Number> clChart = new LineChart<Number, Number>(xAxisCl, yAxisCl);
       clChart.setUserData("clChart");
       XYChart.Series<Number, Number> clSeries = new XYChart.Series<Number, Number>();
       
@@ -1031,22 +1034,48 @@ public class GUI extends Application{
    }
 
    private void displayErrorPane(GoldsteinVortexTheorySolver gvt) {
+      
       this.gvtDisplayPane.getChildren().clear();
       
-      Label lblErr = new Label("The solver did not converge");      
+      Label lblErr = new Label("The solver did not converge in " + gvt.getNumIterations() + " iterations");      
       this.gvtDisplayPane.add(lblErr, 0, 0);
       
+      if (gvt.getNumIterations() == 0) {
+         Label lblzeroConv = new Label("No convergence data can be shown with 0 iterations");      
+         this.gvtDisplayPane.add(lblzeroConv, 0, 1);
+         //nothing to see here folks
+         return;
+      }
       
+      NumberAxis xAxisConv = new NumberAxis();
+      xAxisConv.setLabel("iteration");
+      
+      NumberAxis yAxisCl = new NumberAxis();
+      yAxisCl.setLabel("convergence");
+      
+      LineChart<Number, Number> convChart = new LineChart<Number, Number>(xAxisConv, yAxisCl);
+      convChart.setUserData("convChart");
+      XYChart.Series<Number, Number> convSeries = new XYChart.Series<Number, Number>();
+      
+      //double[] theChords = pg.getChords();
+      double[] convData = gvt.getEpsiConvergenceData();
+      
+      for (int i = 0; i < gvt.getNumIterations(); i++) { 
+         System.out.println("conv data:" + convData);
+         convSeries.getData().add(new XYChart.Data<Number, Number>( i, convData[i] ) ); 
+      }
+      
+      convSeries.setName("conv");      
+      convChart.getData().add(convSeries);   
+      convChart.setLegendSide(Side.BOTTOM);      
+      convChart.setLegendVisible(true);
+      
+      this.gvtDisplayPane.add(convChart, 0,4,1,1);
       
    }
    
    
-   private void showErrorPane() {
-      
-   }
-   private void showResultPane() {
-      
-   }
+  
 }
 
 
