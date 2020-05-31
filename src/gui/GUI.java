@@ -31,6 +31,8 @@ import javafx.stage.Stage;
 import solvers.GoldsteinVortexTheorySolver;
 import solvers.VortexPanelSolver;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 import org.knowm.xchart.QuickChart;
@@ -43,7 +45,7 @@ public class GUI extends Application{
 
 
    private final double DEFAULT_HEIGHT = 600;
-   private final double DEFAULT_WIDTH = DEFAULT_HEIGHT * 1.618;
+   private final double DEFAULT_WIDTH = DEFAULT_HEIGHT * 2;//1.618;
 
    Scene mainScene;
 
@@ -546,39 +548,39 @@ public class GUI extends Application{
       this.threePtBladePane = new GridPane();
       
       Label defPropLbl = new Label("Please select a Propeller Chord Definition to the left");
-      this.defaultPropPane.add(defPropLbl, 0, 0);
+      this.defaultPropPane.add(defPropLbl, 0, 0, 1,1);
       
       //this.threePtBladePane
       //propeller hub chord, max cord, max chord perc, end chord len
       Label lblHubChordLen = new Label("Hub Chord Len: ");
       TextField tfHubChordLen = new TextField();
       tfHubChordLen.setUserData("tfHubChordLen");
-      this.threePtBladePane.add(lblHubChordLen, 0, 0);
-      this.threePtBladePane.add(tfHubChordLen, 1, 0);     
+      this.threePtBladePane.add(lblHubChordLen, 0, 0, 1,1);
+      this.threePtBladePane.add(tfHubChordLen, 1, 0, 1,1);    
 
       Label lblMaxChordLen = new Label("Max Chord Len: ");
       TextField tfMaxChordLen = new TextField();
       tfMaxChordLen.setUserData("tfMaxChordLen");
-      this.threePtBladePane.add(lblMaxChordLen, 0, 1);
-      this.threePtBladePane.add(tfMaxChordLen, 1, 1);
+      this.threePtBladePane.add(lblMaxChordLen, 0, 1, 1,1);
+      this.threePtBladePane.add(tfMaxChordLen, 1, 1, 1,1);
 
       Label lblMaxChordLocPerc = new Label("Max Chord Loc Perc: ");
       TextField tfMaxChordLocPerc = new TextField();
       tfMaxChordLocPerc.setUserData("tfMaxChordLocPerc");
-      this.threePtBladePane.add(lblMaxChordLocPerc, 0, 2);
-      this.threePtBladePane.add(tfMaxChordLocPerc, 1, 2);
+      this.threePtBladePane.add(lblMaxChordLocPerc, 0, 2, 1,1);
+      this.threePtBladePane.add(tfMaxChordLocPerc, 1, 2, 1,1);
 
       Label lblTipChordLen = new Label("Tip Chord Len: ");
       TextField tfTipChordLen = new TextField();
       tfTipChordLen.setUserData("tfTipChordLen");
-      this.threePtBladePane.add(lblTipChordLen, 0, 3);
-      this.threePtBladePane.add(tfTipChordLen, 1, 3);
+      this.threePtBladePane.add(lblTipChordLen, 0, 3, 1,1);
+      this.threePtBladePane.add(tfTipChordLen, 1, 3, 1,1);
       
       this.defaultPropPane.setVisible(false);
       this.threePtBladePane.setVisible(false);
       
-      centerGrid.add(this.defaultPropPane, 0, 0);
-      centerGrid.add(this.threePtBladePane, 0, 0);
+      centerGrid.add(this.defaultPropPane, 0, 0, 1,1);
+      centerGrid.add(this.threePtBladePane, 0, 0, 1,1);
       
       // Set airfoil panes
       
@@ -587,14 +589,14 @@ public class GUI extends Application{
       this.perRadPtAirfoilPane = new GridPane();
       
       Label lbldefSetAf = new Label("Please select how to define airfoils to the left");
-      this.defaultSetAirfoilPane.add(lbldefSetAf, 0, 0);
+      this.defaultSetAirfoilPane.add(lbldefSetAf, 0, 0, 1,1);
       
       Label lblPropNACASeriesInput = new Label("NACA 4 Series Value");
-      this.allSameAirfoilPane.add(lblPropNACASeriesInput, 0, 0);
+      this.allSameAirfoilPane.add(lblPropNACASeriesInput, 0, 0, 1,1);
 
       TextField tfPropNACASeriesInput = new TextField();
       tfPropNACASeriesInput.setUserData("tfPropNACASeriesInput");
-      this.allSameAirfoilPane.add(tfPropNACASeriesInput, 1, 0);
+      this.allSameAirfoilPane.add(tfPropNACASeriesInput, 1, 0, 1,1);
       
       // TODO: Do per radial point filling of NACA AF
       //this.buildPerRadPtAfPanel();
@@ -736,6 +738,7 @@ public class GUI extends Application{
       TextField tf = (TextField) toChk;      
       return Integer.parseInt(tf.getText());
    }
+   
    
    
    // --- Running Functions   
@@ -922,7 +925,9 @@ public class GUI extends Application{
       } catch (Exception e) {
          // TODO Auto-generated catch block
          System.out.println("Exceeded max iterations");
+         this.displayErrorPane(gvt);
          e.printStackTrace();
+         return;
       }
       
       System.out.println("=== GVT Results ===");
@@ -935,10 +940,23 @@ public class GUI extends Application{
    }
    
    private void displayGVTResults(GoldsteinVortexTheorySolver gvt, PropellerGeometry pg) {
+      this.gvtDisplayPane.getChildren().clear();
+      
+      Label Cthr = new Label("Coeff of Thrust: " + gvt.getThrustCoefficient());
+      Cthr.setUserData("Cthr");
+      Label Ctor = new Label("Coeff of Torque: " + gvt.getTorqueCoefficient());
+      Ctor.setUserData("Ctor");
+      Label Cpow = new Label("Coeff of Thrust: " + gvt.getPowerCoefficient());
+      Cpow.setUserData("Cpow");
+      this.gvtDisplayPane.add(Cthr, 0,0, 1,1);
+      this.gvtDisplayPane.add(Ctor, 0,1, 1,1);
+      this.gvtDisplayPane.add(Cpow, 0,2, 1,1);
+      
+      
       
       // this.gvtDisplayPane
       ColumnConstraints c1 = new ColumnConstraints();
-      c1.setMaxWidth(300);
+      c1.setMaxWidth(500);
       this.gvtDisplayPane.getColumnConstraints().add(c1);
       
       // plot chord
@@ -946,13 +964,9 @@ public class GUI extends Application{
       xAxisRad.setLabel("Radius");
       
       NumberAxis yAxisChord = new NumberAxis();
-      yAxisChord.setLabel("X-Sect Chord Length");
+      yAxisChord.setLabel("Chord Length");
       
-      Object testChartRad = this.getByUserData(this.gvtDisplayPane, "chordChart");
-      if (!(testChartRad == null)) {
-         //delete everything
-         this.gvtDisplayPane.getChildren().remove((LineChart<Number, Number>) testChartRad);
-      }
+      
       
       LineChart<Number, Number> chordChart = new LineChart<Number, Number>(xAxisRad, yAxisChord);
       chordChart.setUserData("chordChart");
@@ -961,16 +975,29 @@ public class GUI extends Application{
       double[] theChords = pg.getChords();
       double[] theRads = pg.getRadiusPoints();
       
+      double smallest = theChords[0];
+      double largest = theChords[0];
+      
       for (int i = 0; i < pg.getNumDescPoints(); i++) { 
+         if (theChords[i] > largest) {
+            largest = theChords[i];
+         }
+         if (theChords[i] < smallest) {
+            smallest = theChords[i];
+         }
          chordSeries.getData().add(new XYChart.Data<Number, Number>( theRads[i], theChords[i] ) ); 
       }
+      
+      yAxisChord.setAutoRanging(false);
+      yAxisChord.setLowerBound(smallest - (smallest/8));
+      yAxisChord.setUpperBound(largest + (smallest/8));
       
       chordSeries.setName("Chord Length");      
       chordChart.getData().add(chordSeries);   
       chordChart.setLegendSide(Side.BOTTOM);      
       chordChart.setLegendVisible(true);
       
-      this.gvtDisplayPane.add(chordChart, 0,0, 1,1);
+      this.gvtDisplayPane.add(chordChart, 0,3, 1,1);
       
       
       
@@ -979,13 +1006,7 @@ public class GUI extends Application{
       xAxisCl.setLabel("Radius");
       
       NumberAxis yAxisCl = new NumberAxis();
-      yAxisChord.setLabel("Coeff of Lift");
-      
-      Object testChartCl = this.getByUserData(this.gvtDisplayPane, "clChart");
-      if (!(testChartCl == null)) {
-         //delete everything
-         this.gvtDisplayPane.getChildren().remove((LineChart<Number, Number>) testChartCl);
-      }
+      yAxisCl.setLabel("Coeff of Lift");
       
       LineChart<Number, Number> clChart = new LineChart<Number, Number>(xAxisRad, yAxisCl);
       clChart.setUserData("clChart");
@@ -1003,13 +1024,29 @@ public class GUI extends Application{
       clChart.setLegendSide(Side.BOTTOM);      
       clChart.setLegendVisible(true);
       
-      this.gvtDisplayPane.add(clChart, 0,1,1,1);
+      this.gvtDisplayPane.add(clChart, 0,4,1,1);
       
-      //this.propellerPane.setRight(this.gvtDisplayPane);
       
       
    }
 
+   private void displayErrorPane(GoldsteinVortexTheorySolver gvt) {
+      this.gvtDisplayPane.getChildren().clear();
+      
+      Label lblErr = new Label("The solver did not converge");      
+      this.gvtDisplayPane.add(lblErr, 0, 0);
+      
+      
+      
+   }
+   
+   
+   private void showErrorPane() {
+      
+   }
+   private void showResultPane() {
+      
+   }
 }
 
 
