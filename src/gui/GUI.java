@@ -949,7 +949,7 @@ public class GUI extends Application{
       Cthr.setUserData("Cthr");
       Label Ctor = new Label("Coeff of Torque: " + gvt.getTorqueCoefficient());
       Ctor.setUserData("Ctor");
-      Label Cpow = new Label("Coeff of Thrust: " + gvt.getPowerCoefficient());
+      Label Cpow = new Label("Coeff of Power: " + gvt.getPowerCoefficient());
       Cpow.setUserData("Cpow");
       this.gvtDisplayPane.add(Cthr, 0,0, 1,1);
       this.gvtDisplayPane.add(Ctor, 0,1, 1,1);
