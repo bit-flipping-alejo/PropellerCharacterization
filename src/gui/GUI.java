@@ -865,7 +865,11 @@ public class GUI extends Application{
       }
       
       AirfoilGeometry ag = new AirfoilGeometry();
-      PropellerGeometry pg = new PropellerGeometry();  
+      
+      int numPts = this.getTextFieldAsInt(this.gvtControlPane, "tfnumDescPts");  
+      System.out.println("Omega is: " + numPts);
+      
+      PropellerGeometry pg = new PropellerGeometry(numPts);  
       
       if (this.bladeAfDef == bladeAfDefinition.ALLSAME) {
          TextField nacaNum = (TextField) this.getByUserData( this.allSameAirfoilPane , "tfPropNACASeriesInput");
